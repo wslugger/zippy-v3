@@ -88,14 +88,17 @@ export function ServiceForm({ initialData, serviceId }: ServiceFormProps) {
                 ...opt,
                 constraints: opt.constraints || [],
                 assumptions: opt.assumptions || [],
-                designOptions: (opt.designOptions || []).map((group: any) => ({
+                designOptions: (opt.designOptions || []).map((group: any, gIdx: number) => ({
                     ...group,
-                    choices: (group.choices || []).map((choice: any) => ({
+                    groupId: group.groupId || `group-${gIdx}-${Date.now()}`,
+                    groupLabel: group.groupLabel || group.label || "New Category",
+                    choices: (group.choices || []).map((choice: any, cIdx: number) => ({
                         ...choice,
-                        name: choice.name || "",
-                        category: choice.category || "Default",
+                        id: choice.id || choice.value || `choice-${cIdx}-${Date.now()}`,
+                        name: choice.name || choice.label || "New Choice",
+                        category: choice.category || group.groupLabel || group.label || "Default",
                         shortDescription: choice.shortDescription || "",
-                        description: choice.description || "",
+                        description: choice.description || choice.longDescription || "",
                         pros: choice.pros || [],
                         cons: choice.cons || [],
                         constraints: choice.constraints || [],
@@ -114,21 +117,24 @@ export function ServiceForm({ initialData, serviceId }: ServiceFormProps) {
 
 
     const onInvalid = (errors: any) => {
-        // Log keys and full error object to help debug "empty object" issues
-        console.error("Form Validation Errors:", {
-            keys: Object.keys(errors),
-            details: errors,
-            raw: JSON.stringify(errors, null, 2)
-        });
+        console.error("Form Validation Errors:", errors);
+        // Deep log for nested errors
+        const logDeep = (obj: any, path = "") => {
+            if (!obj || typeof obj !== "object") return;
+            Object.keys(obj).forEach(key => {
+                const currentPath = path ? `${path}.${key}` : key;
+                if (obj[key]?.message) {
+                    console.error(`Validation Error at [${currentPath}]: ${obj[key].message}`);
+                } else {
+                    logDeep(obj[key], currentPath);
+                }
+            });
+        };
+        logDeep(errors);
 
         toast.error("Please fix the validation errors before saving.");
 
-        // Automatically switch to the tab with the first error
-        if (errors.name || errors.slug || errors.shortDescription || errors.description) {
-            setActiveTab("general");
-        } else if (errors.serviceOptions || errors.constraints || errors.assumptions) {
-            // These are more likely to be on the options/general tab depending on layout
-            // serviceOptions is definitely the second tab
+        if (errors) {
             if (errors.serviceOptions) {
                 setActiveTab("options");
             } else {
