@@ -187,8 +187,8 @@ function ServiceInclusionRow({
                             type="button"
                             onClick={() => onDesignationChange(inclusion.serviceId, d)}
                             className={`px-2 py-0.5 rounded text-xs font-medium border transition-all ${inclusion.designation === d
-                                    ? DESIGNATION_STYLES[d]
-                                    : "border-transparent text-muted-foreground hover:border-border"
+                                ? DESIGNATION_STYLES[d]
+                                : "border-transparent text-muted-foreground hover:border-border"
                                 }`}
                         >
                             {d === "required" ? "Required" : d === "standard" ? "Standard" : "Optional"}
@@ -226,7 +226,7 @@ function ServiceInclusionRow({
                             </p>
                             <div className="space-y-1">
                                 {options.map((opt) => {
-                                    const checked = inclusion.includedOptionIds.includes(opt.optionId);
+                                    const checked = (inclusion.includedOptionIds || []).includes(opt.optionId);
                                     return (
                                         <label
                                             key={opt.optionId}
@@ -255,15 +255,15 @@ function ServiceInclusionRow({
                             </p>
                             <div className="flex flex-wrap gap-1.5">
                                 {features.map((feat) => {
-                                    const checked = inclusion.includedFeatures.includes(feat);
+                                    const checked = (inclusion.includedFeatures || []).includes(feat);
                                     return (
                                         <button
                                             key={feat}
                                             type="button"
                                             onClick={() => onToggleFeature(inclusion.serviceId, feat)}
                                             className={`px-2 py-0.5 rounded-full text-xs border transition-all ${checked
-                                                    ? "bg-primary text-primary-foreground border-primary"
-                                                    : "border-border text-muted-foreground hover:border-ring"
+                                                ? "bg-primary text-primary-foreground border-primary"
+                                                : "border-border text-muted-foreground hover:border-ring"
                                                 }`}
                                         >
                                             {feat}
@@ -356,12 +356,13 @@ export function PackageForm({ package: pkg, services }: PackageFormProps) {
         setInclusions((prev) =>
             prev.map((i) => {
                 if (i.serviceId !== serviceId) return i;
-                const has = i.includedOptionIds.includes(optionId);
+                const optIds = i.includedOptionIds || [];
+                const has = optIds.includes(optionId);
                 return {
                     ...i,
                     includedOptionIds: has
-                        ? i.includedOptionIds.filter((id) => id !== optionId)
-                        : [...i.includedOptionIds, optionId],
+                        ? optIds.filter((id) => id !== optionId)
+                        : [...optIds, optionId],
                 };
             })
         );
@@ -371,12 +372,13 @@ export function PackageForm({ package: pkg, services }: PackageFormProps) {
         setInclusions((prev) =>
             prev.map((i) => {
                 if (i.serviceId !== serviceId) return i;
-                const has = i.includedFeatures.includes(feature);
+                const feats = i.includedFeatures || [];
+                const has = feats.includes(feature);
                 return {
                     ...i,
                     includedFeatures: has
-                        ? i.includedFeatures.filter((f) => f !== feature)
-                        : [...i.includedFeatures, feature],
+                        ? feats.filter((f) => f !== feature)
+                        : [...feats, feature],
                 };
             })
         );
