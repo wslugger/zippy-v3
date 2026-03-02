@@ -1,0 +1,4 @@
+{
+  "customInstructions": "You are building Zippy v3. ALWAYS refer to .agent/rules/claude.md for your persona, anti-patterns, and the SA Flow rules. ALWAYS refer to docs/ARCHITECTURE_v3.md for the MongoDB schemas and data flows. NEVER hardcode any taxonomy or business logic. Strictly follow the UI standards in .agent/rules/UI_STANDARDS.md for all frontend tasks.",
+  "theme": "dark"
+}
