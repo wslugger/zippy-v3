@@ -17,6 +17,16 @@ export default async function EditPackagePage({
 
     if (!pkg) notFound();
 
+    const allFeatures = await prisma.feature.findMany({
+        where: { service: { in: services.map((s) => s.name) } },
+        orderBy: { name: "asc" },
+    });
+
+    const servicesWithFeatures = services.map((s) => ({
+        ...s,
+        features: allFeatures.filter((f) => f.service === s.name).map((f) => f.name),
+    }));
+
     const formatted = {
         ...pkg,
         createdAt: pkg.createdAt.toISOString(),
@@ -29,7 +39,7 @@ export default async function EditPackagePage({
                 title={`Edit: ${pkg.name}`}
                 description="Update the package details, included services, and collateral."
             />
-            <PackageForm package={formatted} services={services} />
+            <PackageForm package={formatted} services={servicesWithFeatures as any} />
         </div>
     );
 }

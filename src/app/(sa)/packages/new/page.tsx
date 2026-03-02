@@ -8,13 +8,23 @@ export default async function NewPackagePage() {
         orderBy: { name: "asc" },
     });
 
+    const allFeatures = await prisma.feature.findMany({
+        where: { service: { in: services.map((s) => s.name) } },
+        orderBy: { name: "asc" },
+    });
+
+    const servicesWithFeatures = services.map((s) => ({
+        ...s,
+        features: allFeatures.filter((f) => f.service === s.name).map((f) => f.name),
+    }));
+
     return (
         <div className="space-y-6 max-w-4xl">
             <PageHeader
                 title="New Package"
                 description="Create a new service package by defining its name, description, included services, and collateral."
             />
-            <PackageForm services={services} />
+            <PackageForm services={servicesWithFeatures as any} />
         </div>
     );
 }
