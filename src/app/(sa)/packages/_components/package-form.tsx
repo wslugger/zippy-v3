@@ -69,9 +69,9 @@ const COLLATERAL_ICONS: Record<CollateralType, React.ElementType> = {
 };
 
 const DESIGNATION_STYLES: Record<InclusionDesignation, string> = {
-    required: "bg-primary text-primary-foreground",
-    standard: "bg-secondary text-secondary-foreground",
-    optional: "border border-dashed text-muted-foreground bg-transparent",
+    required: "bg-zinc-900 text-white border-zinc-900 shadow-sm",
+    standard: "bg-blue-600 text-white border-blue-600 shadow-sm",
+    optional: "bg-white text-zinc-800 border-zinc-300 shadow-sm",
 };
 
 const emptyCollateral = (): Collateral => ({ title: "", url: "", type: "PDF" });
@@ -180,15 +180,15 @@ function ServiceInclusionRow({
                 </div>
 
                 {/* Designation selector */}
-                <div className="flex gap-1 shrink-0">
+                <div className="flex gap-1 shrink-0 bg-zinc-100/80 p-1 rounded-md border border-zinc-200 shadow-inner">
                     {(["required", "standard", "optional"] as InclusionDesignation[]).map((d) => (
                         <button
                             key={d}
                             type="button"
                             onClick={() => onDesignationChange(inclusion.serviceId, d)}
-                            className={`px-2 py-0.5 rounded text-xs font-medium border transition-all ${inclusion.designation === d
+                            className={`px-3 py-1 rounded text-xs font-semibold border transition-all tracking-wide ${inclusion.designation === d
                                 ? DESIGNATION_STYLES[d]
-                                : "border-transparent text-muted-foreground hover:border-border"
+                                : "border-transparent text-zinc-500 hover:text-zinc-800 hover:bg-zinc-200/50"
                                 }`}
                         >
                             {d === "required" ? "Required" : d === "standard" ? "Standard" : "Optional"}
