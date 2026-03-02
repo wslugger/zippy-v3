@@ -23,7 +23,7 @@ import { Plus, Trash2, ChevronLeft, Save } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const designOptionSchema = z.object({
     id: z.string().optional(),
@@ -113,6 +113,45 @@ export function ServiceForm({ initialData, serviceId }: ServiceFormProps) {
         control: form.control,
         name: "serviceOptions",
     });
+
+    // Reset form when initialData is loaded/changed
+    useEffect(() => {
+        if (initialData) {
+            const mappedOptions = (initialData.serviceOptions || []).map((opt: any) => ({
+                ...opt,
+                constraints: opt.constraints || [],
+                assumptions: opt.assumptions || [],
+                designOptions: (opt.designOptions || []).map((group: any, gIdx: number) => ({
+                    ...group,
+                    groupId: group.groupId || group.id || `group-${gIdx}-${Date.now()}`,
+                    groupLabel: group.groupLabel || group.label || "New Category",
+                    choices: (group.choices || []).map((choice: any, cIdx: number) => ({
+                        ...choice,
+                        id: choice.id || choice.value || `choice-${cIdx}-${Date.now()}`,
+                        name: choice.name || choice.label || "New Choice",
+                        category: choice.category || group.groupLabel || group.label || "Default",
+                        shortDescription: choice.shortDescription || "",
+                        description: choice.description || choice.longDescription || "",
+                        pros: choice.pros || [],
+                        cons: choice.cons || [],
+                        constraints: choice.constraints || [],
+                        assumptions: choice.assumptions || [],
+                    }))
+                }))
+            }));
+
+            form.reset({
+                name: initialData.name || "",
+                slug: initialData.slug || "",
+                shortDescription: initialData.shortDescription || "",
+                description: initialData.description || "",
+                isActive: initialData.isActive ?? true,
+                constraints: initialData.constraints || [],
+                assumptions: initialData.assumptions || [],
+                serviceOptions: mappedOptions,
+            });
+        }
+    }, [initialData, form]);
 
 
 
