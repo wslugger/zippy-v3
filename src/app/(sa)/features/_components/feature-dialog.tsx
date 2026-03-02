@@ -94,14 +94,22 @@ export function FeatureDialog({
         fetchTaxonomy();
     }, []);
 
-    const featureStatuses = taxonomy.featureStatuses || ["Supported", "Planned", "Beta", "Deprecated"];
+    // The user-created "Status" category is stored in extraFields. We check case-insensitively.
+    const customStatusKey = taxonomy.extraFields
+        ? Object.keys(taxonomy.extraFields).find((k) => k.toLowerCase() === "status")
+        : undefined;
+    const customStatuses = customStatusKey ? taxonomy.extraFields[customStatusKey] : null;
+
+    const featureStatuses = (customStatuses && customStatuses.length > 0)
+        ? customStatuses
+        : ["Supported", "Planned", "Beta", "Deprecated"];
 
     const form = useForm<FeatureFormValues>({
         resolver: zodResolver(featureSchema),
         defaultValues: {
             name: "",
             service: "",
-            status: "Supported",
+            status: featureStatuses[0] || "Supported",
             description: "",
             caveats: [],
             assumptions: [],
@@ -122,13 +130,14 @@ export function FeatureDialog({
             form.reset({
                 name: "",
                 service: "",
-                status: "Supported",
+                status: featureStatuses[0] || "Supported",
                 description: "",
                 caveats: [],
                 assumptions: [],
             });
         }
-    }, [feature, form, open]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [feature, form, open, featureStatuses[0]]);
 
     const onSubmit = async (data: FeatureFormValues) => {
         try {
