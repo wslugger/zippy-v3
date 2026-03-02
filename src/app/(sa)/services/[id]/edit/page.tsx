@@ -21,7 +21,6 @@ export default async function EditServicePage({ params }: EditServicePageProps) 
         ...service,
         serviceOptions: (service.serviceOptions as any[]).map(opt => ({
             ...opt,
-            features: opt.features || [],
             constraints: opt.constraints || [],
             assumptions: opt.assumptions || [],
             designOptions: opt.designOptions || []

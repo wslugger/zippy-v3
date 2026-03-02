@@ -38,7 +38,6 @@ const designOptionSchema = z.object({
     description: z.string().optional(),
     pros: z.array(z.string()).optional(),
     cons: z.array(z.string()).optional(),
-    features: z.array(z.string()).optional(),
     constraints: z.array(z.string()).optional(),
     assumptions: z.array(z.string()).optional(),
 });
@@ -48,7 +47,6 @@ const serviceOptionSchema = z.object({
     name: z.string().min(1, "Name is required"),
     shortDescription: z.string().min(1, "Short description is required"),
     description: z.string().optional().or(z.literal("")),
-    features: z.array(z.string()).optional(),
     constraints: z.array(z.string()).optional(),
     assumptions: z.array(z.string()).optional(),
     designOptions: z.array(z.object({
@@ -64,7 +62,6 @@ const serviceSchema = z.object({
     shortDescription: z.string().min(5, "Short description must be at least 5 characters"),
     description: z.string().min(10, "Description must be at least 10 characters"),
     isActive: z.boolean(),
-    features: z.array(z.string()),
     constraints: z.array(z.string()),
     assumptions: z.array(z.string()),
     serviceOptions: z.array(serviceOptionSchema),
@@ -92,7 +89,6 @@ export function ServiceForm({ initialData, serviceId }: ServiceFormProps) {
             shortDescription: initialData?.shortDescription || "",
             description: initialData?.description || "",
             isActive: initialData?.isActive ?? true,
-            features: initialData?.features || [],
             constraints: initialData?.constraints || [],
             assumptions: initialData?.assumptions || [],
             serviceOptions: initialData?.serviceOptions || [],
@@ -134,7 +130,7 @@ export function ServiceForm({ initialData, serviceId }: ServiceFormProps) {
         // Automatically switch to the tab with the first error
         if (errors.name || errors.slug || errors.shortDescription || errors.description) {
             setActiveTab("general");
-        } else if (errors.serviceOptions || errors.features || errors.constraints || errors.assumptions) {
+        } else if (errors.serviceOptions || errors.constraints || errors.assumptions) {
             // These are more likely to be on the options/general tab depending on layout
             // serviceOptions is definitely the second tab
             if (errors.serviceOptions) {
@@ -308,65 +304,6 @@ export function ServiceForm({ initialData, serviceId }: ServiceFormProps) {
                             </CardContent>
                         </Card>
 
-                        <Card className="border-zinc-200">
-                            <CardHeader className="flex flex-row items-center justify-between">
-                                <CardTitle className="text-lg">Supported Features</CardTitle>
-                                <div className="flex items-center gap-2">
-                                    <div className="relative">
-                                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-zinc-400" />
-                                        <Input
-                                            placeholder="Search features..."
-                                            className="pl-9 h-9 w-[200px]"
-                                            value={featureSearch}
-                                            onChange={(e) => setFeatureSearch(e.target.value)}
-                                        />
-                                    </div>
-                                </div>
-                            </CardHeader>
-                            <CardContent>
-                                {loadingFeatures ? (
-                                    <div className="h-32 flex items-center justify-center text-zinc-500 italic">
-                                        Loading features catalog...
-                                    </div>
-                                ) : (
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[400px] overflow-y-auto p-1 text-left">
-                                        {filteredFeatures.map((feature) => (
-                                            <FormField
-                                                key={feature.id}
-                                                control={form.control}
-                                                name="features"
-                                                render={({ field }) => (
-                                                    <FormItem
-                                                        key={feature.id}
-                                                        className="flex flex-row items-start space-x-3 space-y-0 rounded-lg border p-4 bg-zinc-50/50 hover:bg-zinc-50 transition-colors"
-                                                    >
-                                                        <FormControl>
-                                                            <Checkbox
-                                                                checked={field.value?.includes(feature.name)}
-                                                                onCheckedChange={(checked) => {
-                                                                    return checked
-                                                                        ? field.onChange([...field.value, feature.name])
-                                                                        : field.onChange(
-                                                                            field.value?.filter((value: string) => value !== feature.name)
-                                                                        )
-                                                                }}
-                                                            />
-                                                        </FormControl>
-                                                        <div className="space-y-1 leading-none">
-                                                            <FormLabel className="text-sm font-medium cursor-pointer">
-                                                                {feature.name}
-                                                            </FormLabel>
-                                                            <p className="text-[10px] text-zinc-400 uppercase tracking-wider">{feature.service}</p>
-                                                        </div>
-                                                    </FormItem>
-                                                )}
-                                            />
-                                        ))}
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
-
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <Card className="border-zinc-200">
                                 <CardHeader>
@@ -431,7 +368,6 @@ export function ServiceForm({ initialData, serviceId }: ServiceFormProps) {
                                     optionId: `option-${Date.now()}`,
                                     name: "New Option",
                                     shortDescription: "",
-                                    features: [],
                                     constraints: [],
                                     assumptions: [],
                                     designOptions: []
@@ -458,7 +394,7 @@ export function ServiceForm({ initialData, serviceId }: ServiceFormProps) {
                     </TabsContent>
                 </Tabs>
             </form>
-        </Form>
+        </Form >
     );
 }
 
@@ -546,33 +482,6 @@ function ServiceOptionItem({ index, control, watch, remove, availableFeatures }:
                             </div>
 
                             <div className="space-y-4">
-                                <FormLabel>Supported Features</FormLabel>
-                                <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 p-4 bg-white border border-zinc-200 rounded-lg max-h-[300px] overflow-y-auto">
-                                    {availableFeatures.map((feature: any) => (
-                                        <FormField
-                                            key={feature.id}
-                                            control={control}
-                                            name={`serviceOptions.${index}.features`}
-                                            render={({ field }) => (
-                                                <div className="flex items-start gap-2 p-2 rounded hover:bg-zinc-50 transition-colors">
-                                                    <Checkbox
-                                                        checked={field.value?.includes(feature.name)}
-                                                        onCheckedChange={(checked) => {
-                                                            const current = field.value || [];
-                                                            return checked
-                                                                ? field.onChange([...current, feature.name])
-                                                                : field.onChange(current.filter((x: string) => x !== feature.name))
-                                                        }}
-                                                    />
-                                                    <div className="space-y-0.5 leading-none">
-                                                        <span className="text-xs font-medium text-zinc-800">{feature.name}</span>
-                                                        <p className="text-[9px] text-zinc-400 font-mono tracking-tight uppercase">{feature.service}</p>
-                                                    </div>
-                                                </div>
-                                            )}
-                                        />
-                                    ))}
-                                </div>
                             </div>
                         </div>
 
@@ -657,7 +566,6 @@ function DesignOptionChoices({ serviceIndex, groupIndex, control }: any) {
                         description: "",
                         pros: [],
                         cons: [],
-                        features: [],
                         constraints: [],
                         assumptions: []
                     })}

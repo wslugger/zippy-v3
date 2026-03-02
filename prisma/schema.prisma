@@ -41,7 +41,6 @@ model Service {
   constraints      String[]
   assumptions      String[]
   serviceOptions   Json[]
-  features         String[]
   isActive         Boolean  @default(true)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
