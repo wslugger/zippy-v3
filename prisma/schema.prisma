@@ -1,7 +1,80 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
 datasource db {
   provider = "mongodb"
   url      = env("DATABASE_URL")
 }
-generator client {
-  provider = "prisma-client-js"
+
+model GlobalTaxonomy {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  type      String   @unique
+  data      Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("system_config")
+}
+
+model Service {
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  slug              String   @unique
+  name              String
+  shortDescription  String
+  description       String
+  constraints       String[]
+  assumptions       String[]
+  serviceOptions    Json[]
+  features          String[]
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("services")
+}
+
+model Package {
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  slug              String   @unique
+  name              String
+  shortDescription  String
+  description       String?
+  category          String
+  includedServices  Json[]
+  collateral        Json[]
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("packages")
+}
+
+model Project {
+  id                 String   @id @default(auto()) @map("_id") @db.ObjectId
+  customerName       String
+  description        String?
+  selectedPackageId  String?
+  packageName        String?
+  packageSlug        String?
+  packageCollateral  Json[]
+  moduleStates       Json
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@map("projects")
+}
+
+model Feature {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String   @unique
+  service     String
+  status      String
+  description String?
+  caveats     String[]
+  assumptions String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("features")
 }

@@ -23,6 +23,7 @@
 # misc
 .DS_Store
 *.pem
+.tmp.driveupload/
 
 # debug
 npm-debug.log*
@@ -41,3 +42,4 @@ yarn-error.log*
 next-env.d.ts
 
 /src/generated/prisma
+.claude/worktrees/
