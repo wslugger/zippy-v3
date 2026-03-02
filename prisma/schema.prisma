@@ -2,6 +2,98 @@ datasource db {
   provider = "mongodb"
   url      = env("DATABASE_URL")
 }
+
 generator client {
   provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+// ============================================================
+// GLOBAL TAXONOMY (Singleton)
+// ============================================================
+model GlobalTaxonomy {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  slug            String   @unique @default("global_taxonomy_v1")
+  vendors         String[]
+  purposes        String[]
+  interfaceTypes  String[]
+  wifiStandards   String[]
+  cellularTypes   String[]
+  poeStandards    String[]
+  mountingOptions String[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("system_config")
+}
+
+// ============================================================
+// SERVICE CATALOG
+// Service → Service Options → Design Options hierarchy
+// ============================================================
+model Service {
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  slug             String   @unique
+  name             String
+  shortDescription String
+  description      String
+  constraints      String[]
+  assumptions      String[]
+  serviceOptions   Json[]
+  features         String[]
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("services")
+}
+
+// ============================================================
+// PACKAGE CATALOG (Selected in Module 1)
+// ============================================================
+model Package {
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  slug             String   @unique
+  name             String
+  shortDescription String
+  description      String
+  includedServices Json[]   // Array of PackageInclusion (service, options, features + designation)
+  collateral       Json[]   // Up to 4 collateral items { title, url, type }
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("packages")
+}
+
+// ============================================================
+// PROJECT LEDGER (Central state document)
+// ============================================================
+model Project {
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  customerName      String
+  description       String?  @default("")
+  status            String   @default("draft")
+  moduleStates      Json
+
+  // Module 1 output
+  selectedPackageId String?  @db.ObjectId
+  packageSlug       String?
+  packageName       String?
+  packageReasoning  String?
+  packageCollateral Json[]
+
+  // Module 2 output (stub)
+  customizations    Json?
+
+  // Module 3 output (stub)
+  bomSnapshot       Json[]
+
+  // Sites (populated later)
+  sites             Json[]
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("projects")
 }
