@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { TaxonomyForm } from "./_components/taxonomy-form";
-import { Metadata } from "next";
+import type { Metadata } from "next";
 
 export const metadata: Metadata = {
     title: "Global Taxonomy | Zippy v3",
@@ -8,14 +8,33 @@ export const metadata: Metadata = {
 };
 
 export default async function TaxonomyPage() {
-    // Fetch initial taxonomy data on the server
-    const taxonomy = await prisma.globalTaxonomy.findUnique({
-        where: { type: "global" },
+    const taxonomy = await prisma.globalTaxonomy.findFirst({
+        where: { slug: "global_taxonomy_v1" },
     });
+
+    // If no taxonomy record exists, start with an empty form
+    let initialData: Record<string, string[]> = {};
+
+    if (taxonomy) {
+        const allData: Record<string, string[]> = {
+            vendors: taxonomy.vendors,
+            purposes: taxonomy.purposes,
+            interfaceTypes: taxonomy.interfaceTypes,
+            wifiStandards: taxonomy.wifiStandards,
+            cellularTypes: taxonomy.cellularTypes,
+            poeStandards: taxonomy.poeStandards,
+            mountingOptions: taxonomy.mountingOptions,
+            ...(taxonomy.extraFields as Record<string, string[]> | null ?? {}),
+        };
+
+        initialData = Object.fromEntries(
+            Object.entries(allData).filter(([, v]) => Array.isArray(v) && v.length > 0)
+        );
+    }
 
     return (
         <div className="container mx-auto max-w-7xl pt-6 pb-20">
-            <TaxonomyForm initialData={taxonomy?.data || {}} />
+            <TaxonomyForm initialData={initialData} />
         </div>
     );
 }

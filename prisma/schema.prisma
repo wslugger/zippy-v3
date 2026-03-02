@@ -21,6 +21,7 @@ model GlobalTaxonomy {
   cellularTypes   String[]
   poeStandards    String[]
   mountingOptions String[]
+  extraFields     Json?    // Stores any user-added categories not in the hardcoded columns
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
