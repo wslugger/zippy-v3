@@ -90,10 +90,34 @@ export const PackageServiceInclusionSchema = z.object({
   serviceName: z.string(),
   serviceSlug: z.string(),
   designation: InclusionDesignationEnum,
-  // Selected optionIds from the service's serviceOptions array
-  includedOptionIds: z.array(z.string()),
-  // Selected feature slugs / names from the service's top-level features
-  includedFeatures: z.array(z.string()),
+  // Selected options with their designations
+  includedOptions: z
+    .array(
+      z.object({
+        optionId: z.string(),
+        designation: InclusionDesignationEnum,
+      })
+    )
+    .default([]),
+  // Selected features with their designations 
+  includedFeatures: z
+    .array(
+      z.object({
+        featureSlug: z.string(),
+        designation: InclusionDesignationEnum,
+      })
+    )
+    .default([]),
+  // Selected design choices with their designations
+  includedDesignChoices: z
+    .array(
+      z.object({
+        groupId: z.string(),
+        choiceValue: z.string(),
+        designation: InclusionDesignationEnum,
+      })
+    )
+    .default([]),
 });
 export type PackageServiceInclusion = z.infer<typeof PackageServiceInclusionSchema>;
 
@@ -111,7 +135,7 @@ export const CreatePackageSchema = z.object({
   slug: z
     .string()
     .min(1, "Slug is required")
-    .regex(/^[a-z0-9-]+$/, "Slug must be lowercase letters, numbers, and hyphens only"),
+    .regex(/^[a-z0-9-_]+$/, "Slug must be lowercase letters, numbers, hyphens, and underscores only"),
   shortDescription: z.string().min(1, "Short description is required"),
   description: z.string().default(""),
   includedServices: z.array(PackageServiceInclusionSchema).default([]),

@@ -74,7 +74,79 @@ const DESIGNATION_STYLES: Record<InclusionDesignation, string> = {
     optional: "bg-white text-foreground border-border shadow-sm",
 };
 
+function DesignationToggle({
+    value,
+    onChange,
+    className = ""
+}: {
+    value: InclusionDesignation;
+    onChange: (d: InclusionDesignation) => void;
+    className?: string;
+}) {
+    return (
+        <div className={`flex gap-0.5 shrink-0 bg-zinc-100/50 p-0.5 rounded-md border border-zinc-200/50 hover:border-zinc-300 transition-colors shadow-inner w-fit ${className}`}>
+            {(["required", "standard", "optional"] as InclusionDesignation[]).map((d) => (
+                <button
+                    key={d}
+                    type="button"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onChange(d);
+                    }}
+                    className={`px-1.5 py-0.5 rounded-[3px] text-[9px] font-bold border transition-all tracking-tight uppercase ${value === d
+                        ? DESIGNATION_STYLES[d]
+                        : "border-transparent text-zinc-400 hover:text-zinc-600 hover:bg-zinc-200/50"
+                        }`}
+                >
+                    {d === "required" ? "Req" : d === "standard" ? "Std" : "Opt"}
+                </button>
+            ))}
+        </div>
+    );
+}
+
 const emptyCollateral = (): Collateral => ({ title: "", url: "", type: "PDF" });
+
+function normalizeInclusions(inclusions: any[] = [], catalog: ServiceRow[] = []): PackageServiceInclusion[] {
+    return inclusions.map((s) => {
+        const serviceInfo = catalog.find(svc => svc.id === s.serviceId);
+        const normalized = {
+            ...s,
+            serviceName: s.serviceName || serviceInfo?.name || "Unknown Service",
+            serviceSlug: s.serviceSlug || serviceInfo?.slug || "",
+            includedOptions: s.includedOptions || (s.includedOptionIds || []).map((id: string) => ({
+                optionId: id,
+                designation: "standard"
+            })),
+            includedFeatures: typeof s.includedFeatures?.[0] === 'string'
+                ? (s.includedFeatures || []).map((f: string) => ({
+                    featureSlug: f,
+                    designation: "standard"
+                }))
+                : (s.includedFeatures || []),
+            includedDesignChoices: s.includedDesignChoices || [],
+        };
+
+        // Migration for includedDesignOptions (record) to includedDesignChoices (array)
+        if (s.includedDesignOptions && !s.includedDesignChoices) {
+            const choices: any[] = [];
+            Object.entries(s.includedDesignOptions).forEach(([groupId, values]) => {
+                if (Array.isArray(values)) {
+                    values.forEach((v: string) => {
+                        choices.push({ groupId, choiceValue: v, designation: "standard" });
+                    });
+                }
+            });
+            normalized.includedDesignChoices = choices;
+        }
+
+        // Cleanup old fields
+        delete normalized.includedOptionIds;
+        delete normalized.includedDesignOptions;
+
+        return normalized as PackageServiceInclusion;
+    });
+}
 
 // ------- Sub-components -------
 
@@ -159,6 +231,8 @@ function ServiceInclusionRow({
     onRemove,
     onToggleOption,
     onToggleFeature,
+    onToggleDesignChoice,
+    onChangeDesignation,
 }: {
     inclusion: PackageServiceInclusion;
     service: ServiceRow | undefined;
@@ -166,6 +240,19 @@ function ServiceInclusionRow({
     onRemove: (serviceId: string) => void;
     onToggleOption: (serviceId: string, optionId: string) => void;
     onToggleFeature: (serviceId: string, feature: string) => void;
+    onToggleDesignChoice: (
+        serviceId: string,
+        groupId: string,
+        value: string,
+        selectionType: "single" | "multi"
+    ) => void;
+    onChangeDesignation: (
+        serviceId: string,
+        type: "option" | "feature" | "choice",
+        id: string,
+        d: InclusionDesignation,
+        groupId?: string
+    ) => void;
 }) {
     const [expanded, setExpanded] = useState(false);
     const options = (service?.serviceOptions ?? []) as ServiceOption[];
@@ -226,22 +313,80 @@ function ServiceInclusionRow({
                             </p>
                             <div className="space-y-1">
                                 {options.map((opt) => {
-                                    const checked = (inclusion.includedOptionIds || []).includes(opt.optionId);
+                                    const checked = !!inclusion.includedOptions?.find(o => o.optionId === opt.optionId);
                                     return (
-                                        <label
-                                            key={opt.optionId}
-                                            className="flex items-center gap-2 cursor-pointer group"
-                                        >
-                                            <input
-                                                type="checkbox"
-                                                checked={checked}
-                                                onChange={() => onToggleOption(inclusion.serviceId, opt.optionId)}
-                                                className="h-4 w-4 rounded border-input accent-primary"
-                                            />
-                                            <span className="text-sm group-hover:text-foreground text-muted-foreground">
-                                                {opt.name}
-                                            </span>
-                                        </label>
+                                        <div key={opt.optionId} className="space-y-1">
+                                            <div className="flex items-center justify-between group h-7">
+                                                <label className="flex items-center gap-2 cursor-pointer grow">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={checked}
+                                                        onChange={() => onToggleOption(inclusion.serviceId, opt.optionId)}
+                                                        className="h-4 w-4 rounded border-input accent-primary"
+                                                    />
+                                                    <span className="text-sm group-hover:text-foreground text-muted-foreground">
+                                                        {opt.name}
+                                                    </span>
+                                                </label>
+
+                                                {checked && (
+                                                    <DesignationToggle
+                                                        value={inclusion.includedOptions?.find(o => o.optionId === opt.optionId)?.designation || "standard"}
+                                                        onChange={(d) => onChangeDesignation(inclusion.serviceId, "option", opt.optionId, d)}
+                                                    />
+                                                )}
+                                            </div>
+
+                                            {/* Design Options for this Service Option */}
+                                            {checked && (opt as any).designOptions?.length > 0 && (
+                                                <div className="ml-6 mt-2 mb-4 space-y-4 border-l-2 border-muted pl-4">
+                                                    {(opt as any).designOptions.map((group: any) => (
+                                                        <div key={group.groupId} className="space-y-2">
+                                                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                                                                {group.groupLabel}
+                                                            </p>
+                                                            <div className="flex flex-wrap gap-2">
+                                                                {group.choices.map((choice: any) => {
+                                                                    const val = choice.value || choice.id;
+                                                                    const choiceInclusion = inclusion.includedDesignChoices?.find(
+                                                                        c => c.groupId === group.groupId && c.choiceValue === val
+                                                                    );
+                                                                    const isSelected = !!choiceInclusion;
+
+                                                                    return (
+                                                                        <div key={val} className="flex flex-col gap-1">
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() =>
+                                                                                    onToggleDesignChoice(
+                                                                                        inclusion.serviceId,
+                                                                                        group.groupId,
+                                                                                        val,
+                                                                                        group.selectionType || "single"
+                                                                                    )
+                                                                                }
+                                                                                className={`px-2 py-1 rounded text-xs border transition-all ${isSelected
+                                                                                    ? "bg-primary/10 text-primary border-primary font-medium"
+                                                                                    : "border-border text-muted-foreground hover:border-ring"
+                                                                                    }`}
+                                                                            >
+                                                                                {choice.label || choice.name}
+                                                                            </button>
+                                                                            {isSelected && (
+                                                                                <DesignationToggle
+                                                                                    value={choiceInclusion.designation}
+                                                                                    onChange={(d) => onChangeDesignation(inclusion.serviceId, "choice", val, d, group.groupId)}
+                                                                                />
+                                                                            )}
+                                                                        </div>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
                                     );
                                 })}
                             </div>
@@ -255,19 +400,27 @@ function ServiceInclusionRow({
                             </p>
                             <div className="flex flex-wrap gap-1.5">
                                 {features.map((feat) => {
-                                    const checked = (inclusion.includedFeatures || []).includes(feat);
+                                    const featInclusion = inclusion.includedFeatures?.find(f => f.featureSlug === feat);
+                                    const checked = !!featInclusion;
                                     return (
-                                        <button
-                                            key={feat}
-                                            type="button"
-                                            onClick={() => onToggleFeature(inclusion.serviceId, feat)}
-                                            className={`px-2 py-0.5 rounded-full text-xs border transition-all ${checked
-                                                ? "bg-primary text-primary-foreground border-primary"
-                                                : "border-border text-muted-foreground hover:border-ring"
-                                                }`}
-                                        >
-                                            {feat}
-                                        </button>
+                                        <div key={feat} className="flex flex-col gap-1.5 items-center bg-muted/30 p-2 rounded-lg border border-transparent hover:border-border transition-all">
+                                            <button
+                                                type="button"
+                                                onClick={() => onToggleFeature(inclusion.serviceId, feat)}
+                                                className={`px-3 py-1 rounded-full text-xs border transition-all font-medium ${checked
+                                                    ? "bg-primary text-primary-foreground border-primary"
+                                                    : "border-border text-muted-foreground hover:border-ring"
+                                                    }`}
+                                            >
+                                                {feat}
+                                            </button>
+                                            {checked && (
+                                                <DesignationToggle
+                                                    value={featInclusion.designation}
+                                                    onChange={(d) => onChangeDesignation(inclusion.serviceId, "feature", feat, d)}
+                                                />
+                                            )}
+                                        </div>
                                     );
                                 })}
                             </div>
@@ -291,7 +444,7 @@ export function PackageForm({ package: pkg, services }: PackageFormProps) {
     const [description, setDescription] = useState(pkg?.description ?? "");
     const [isActive, setIsActive] = useState(pkg?.isActive ?? true);
     const [inclusions, setInclusions] = useState<PackageServiceInclusion[]>(
-        (pkg?.includedServices as PackageServiceInclusion[]) ?? []
+        normalizeInclusions(pkg?.includedServices || [], services)
     );
     const [collateral, setCollateral] = useState<Collateral[]>(
         (pkg?.collateral as Collateral[]) ?? []
@@ -336,8 +489,9 @@ export function PackageForm({ package: pkg, services }: PackageFormProps) {
                 serviceName: svc.name,
                 serviceSlug: svc.slug,
                 designation: "standard",
-                includedOptionIds: [],
+                includedOptions: [],
                 includedFeatures: [],
+                includedDesignChoices: [],
             },
         ]);
     };
@@ -356,33 +510,110 @@ export function PackageForm({ package: pkg, services }: PackageFormProps) {
         setInclusions((prev) =>
             prev.map((i) => {
                 if (i.serviceId !== serviceId) return i;
-                const optIds = i.includedOptionIds || [];
-                const has = optIds.includes(optionId);
+                const opts = i.includedOptions || [];
+                const has = opts.find((o) => o.optionId === optionId);
                 return {
                     ...i,
-                    includedOptionIds: has
-                        ? optIds.filter((id) => id !== optionId)
-                        : [...optIds, optionId],
+                    includedOptions: has
+                        ? opts.filter((o) => o.optionId !== optionId)
+                        : [...opts, { optionId, designation: "standard" }],
                 };
             })
         );
     }, []);
 
-    const toggleFeature = useCallback((serviceId: string, feature: string) => {
+    const toggleFeature = useCallback((serviceId: string, featureSlug: string) => {
         setInclusions((prev) =>
             prev.map((i) => {
                 if (i.serviceId !== serviceId) return i;
                 const feats = i.includedFeatures || [];
-                const has = feats.includes(feature);
+                const has = feats.find((f) => f.featureSlug === featureSlug);
                 return {
                     ...i,
                     includedFeatures: has
-                        ? feats.filter((f) => f !== feature)
-                        : [...feats, feature],
+                        ? feats.filter((f) => f.featureSlug !== featureSlug)
+                        : [...feats, { featureSlug, designation: "standard" }],
                 };
             })
         );
     }, []);
+
+    const toggleDesignChoice = useCallback(
+        (serviceId: string, groupId: string, value: string, selectionType: "single" | "multi") => {
+            setInclusions((prev) =>
+                prev.map((i) => {
+                    if (i.serviceId !== serviceId) return i;
+
+                    const currentChoices = i.includedDesignChoices || [];
+                    let newChoices: typeof currentChoices;
+
+                    const alreadyInGroup = currentChoices.filter((c) => c.groupId === groupId);
+                    const isAlreadySelected = currentChoices.find((c) => c.groupId === groupId && c.choiceValue === value);
+
+                    if (selectionType === "single") {
+                        // Replace whole group with this one choice
+                        newChoices = [
+                            ...currentChoices.filter((c) => c.groupId !== groupId),
+                            { groupId, choiceValue: value, designation: "standard" },
+                        ];
+                    } else {
+                        // Toggle this specific choice
+                        newChoices = isAlreadySelected
+                            ? currentChoices.filter((c) => !(c.groupId === groupId && c.choiceValue === value))
+                            : [...currentChoices, { groupId, choiceValue: value, designation: "standard" }];
+                    }
+
+                    return {
+                        ...i,
+                        includedDesignChoices: newChoices,
+                    };
+                })
+            );
+        },
+        []
+    );
+
+    const changeItemDesignation = useCallback(
+        (
+            serviceId: string,
+            type: "option" | "feature" | "choice",
+            id: string,
+            d: InclusionDesignation,
+            groupId?: string
+        ) => {
+            setInclusions((prev) =>
+                prev.map((i) => {
+                    if (i.serviceId !== serviceId) return i;
+
+                    if (type === "option") {
+                        return {
+                            ...i,
+                            includedOptions: i.includedOptions?.map((o) =>
+                                o.optionId === id ? { ...o, designation: d } : o
+                            ),
+                        };
+                    } else if (type === "feature") {
+                        return {
+                            ...i,
+                            includedFeatures: i.includedFeatures?.map((f) =>
+                                f.featureSlug === id ? { ...f, designation: d } : f
+                            ),
+                        };
+                    } else {
+                        return {
+                            ...i,
+                            includedDesignChoices: i.includedDesignChoices?.map((c) =>
+                                c.groupId === groupId && c.choiceValue === id
+                                    ? { ...c, designation: d }
+                                    : c
+                            ),
+                        };
+                    }
+                })
+            );
+        },
+        []
+    );
 
     // Submit
     const handleSubmit = async (e: React.FormEvent) => {
@@ -528,6 +759,8 @@ export function PackageForm({ package: pkg, services }: PackageFormProps) {
                                     onRemove={removeService}
                                     onToggleOption={toggleOption}
                                     onToggleFeature={toggleFeature}
+                                    onToggleDesignChoice={toggleDesignChoice}
+                                    onChangeDesignation={changeItemDesignation}
                                 />
                             );
                         })}
