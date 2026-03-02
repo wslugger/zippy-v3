@@ -97,3 +97,22 @@ model Project {
 
   @@map("projects")
 }
+
+// ============================================================
+// FEATURE CATALOG
+// Stand-alone features referenced by services
+// ============================================================
+model Feature {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String   @unique
+  service     String
+  status      String   @default("available")
+  description String?
+  caveats     String[]
+  assumptions String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("features")
+}
+
