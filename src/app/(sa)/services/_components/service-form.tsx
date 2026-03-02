@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import {
     Form,
     FormControl,
-    FormDescription,
     FormField,
     FormItem,
     FormLabel,
@@ -19,15 +18,12 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, Edit, ChevronLeft, Save, Search, Info } from "lucide-react";
+import { Plus, Trash2, ChevronLeft, Save } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { useState, useEffect } from "react";
-import { cn } from "@/lib/utils";
+import { useState } from "react";
 
 const designOptionSchema = z.object({
     id: z.string().optional(),
@@ -77,9 +73,6 @@ interface ServiceFormProps {
 export function ServiceForm({ initialData, serviceId }: ServiceFormProps) {
     const router = useRouter();
     const [activeTab, setActiveTab] = useState("general");
-    const [availableFeatures, setAvailableFeatures] = useState<any[]>([]);
-    const [featureSearch, setFeatureSearch] = useState("");
-    const [loadingFeatures, setLoadingFeatures] = useState(true);
 
     const form = useForm<ServiceFormValues>({
         resolver: zodResolver(serviceSchema),
@@ -91,7 +84,25 @@ export function ServiceForm({ initialData, serviceId }: ServiceFormProps) {
             isActive: initialData?.isActive ?? true,
             constraints: initialData?.constraints || [],
             assumptions: initialData?.assumptions || [],
-            serviceOptions: initialData?.serviceOptions || [],
+            serviceOptions: (initialData?.serviceOptions || []).map((opt: any) => ({
+                ...opt,
+                constraints: opt.constraints || [],
+                assumptions: opt.assumptions || [],
+                designOptions: (opt.designOptions || []).map((group: any) => ({
+                    ...group,
+                    choices: (group.choices || []).map((choice: any) => ({
+                        ...choice,
+                        name: choice.name || "",
+                        category: choice.category || "Default",
+                        shortDescription: choice.shortDescription || "",
+                        description: choice.description || "",
+                        pros: choice.pros || [],
+                        cons: choice.cons || [],
+                        constraints: choice.constraints || [],
+                        assumptions: choice.assumptions || [],
+                    }))
+                }))
+            })) || [],
         },
     });
 
@@ -100,22 +111,7 @@ export function ServiceForm({ initialData, serviceId }: ServiceFormProps) {
         name: "serviceOptions",
     });
 
-    useEffect(() => {
-        async function loadFeatures() {
-            try {
-                const res = await fetch("/api/features");
-                if (res.ok) {
-                    const data = await res.json();
-                    setAvailableFeatures(data);
-                }
-            } catch (error) {
-                toast.error("Failed to load features catalog");
-            } finally {
-                setLoadingFeatures(false);
-            }
-        }
-        loadFeatures();
-    }, []);
+
 
     const onInvalid = (errors: any) => {
         // Log keys and full error object to help debug "empty object" issues
@@ -166,10 +162,7 @@ export function ServiceForm({ initialData, serviceId }: ServiceFormProps) {
         }
     };
 
-    const filteredFeatures = availableFeatures.filter(f =>
-        f.name.toLowerCase().includes(featureSearch.toLowerCase()) ||
-        (f.service && f.service.toLowerCase().includes(featureSearch.toLowerCase()))
-    );
+
 
     return (
         <Form {...form}>
@@ -246,7 +239,7 @@ export function ServiceForm({ initialData, serviceId }: ServiceFormProps) {
                                             <FormItem>
                                                 <FormLabel>Name</FormLabel>
                                                 <FormControl>
-                                                    <Input placeholder="e.g. Managed SD-WAN" {...field} />
+                                                    <Input placeholder="e.g. Managed SD-WAN" {...field} value={field.value ?? ""} />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
@@ -259,7 +252,7 @@ export function ServiceForm({ initialData, serviceId }: ServiceFormProps) {
                                             <FormItem>
                                                 <FormLabel>Slug</FormLabel>
                                                 <FormControl>
-                                                    <Input placeholder="e.g. managed-sd-wan" {...field} />
+                                                    <Input placeholder="e.g. managed-sd-wan" {...field} value={field.value ?? ""} />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
@@ -274,7 +267,7 @@ export function ServiceForm({ initialData, serviceId }: ServiceFormProps) {
                                         <FormItem>
                                             <FormLabel>Short Description</FormLabel>
                                             <FormControl>
-                                                <Input placeholder="Brief overview for cards" {...field} />
+                                                <Input placeholder="Brief overview for cards" {...field} value={field.value ?? ""} />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -295,6 +288,7 @@ export function ServiceForm({ initialData, serviceId }: ServiceFormProps) {
                                                     placeholder="Comprehensive description of the service..."
                                                     className="min-h-[120px]"
                                                     {...field}
+                                                    value={field.value ?? ""}
                                                 />
                                             </FormControl>
                                             <FormMessage />
@@ -387,7 +381,6 @@ export function ServiceForm({ initialData, serviceId }: ServiceFormProps) {
                                     control={form.control}
                                     watch={form.watch}
                                     remove={() => removeServiceOption(index)}
-                                    availableFeatures={availableFeatures}
                                 />
                             ))}
                         </div>
@@ -398,7 +391,7 @@ export function ServiceForm({ initialData, serviceId }: ServiceFormProps) {
     );
 }
 
-function ServiceOptionItem({ index, control, watch, remove, availableFeatures }: any) {
+function ServiceOptionItem({ index, control, watch, remove }: any) {
     const { fields: designOptionGroups, append: appendGroup, remove: removeGroup } = useFieldArray({
         control,
         name: `serviceOptions.${index}.designOptions`,
@@ -450,7 +443,7 @@ function ServiceOptionItem({ index, control, watch, remove, availableFeatures }:
                                         <FormItem>
                                             <FormLabel>Name</FormLabel>
                                             <FormControl>
-                                                <Input {...field} />
+                                                <Input {...field} value={field.value ?? ""} />
                                             </FormControl>
                                         </FormItem>
                                     )}
@@ -462,7 +455,7 @@ function ServiceOptionItem({ index, control, watch, remove, availableFeatures }:
                                         <FormItem>
                                             <FormLabel>Short Description</FormLabel>
                                             <FormControl>
-                                                <Input {...field} />
+                                                <Input {...field} value={field.value ?? ""} />
                                             </FormControl>
                                         </FormItem>
                                     )}
@@ -474,7 +467,7 @@ function ServiceOptionItem({ index, control, watch, remove, availableFeatures }:
                                         <FormItem>
                                             <FormLabel>Detailed Description</FormLabel>
                                             <FormControl>
-                                                <Textarea className="min-h-[100px]" {...field} />
+                                                <Textarea className="min-h-[100px]" {...field} value={field.value ?? ""} />
                                             </FormControl>
                                         </FormItem>
                                     )}
@@ -512,7 +505,7 @@ function ServiceOptionItem({ index, control, watch, remove, availableFeatures }:
                                                     render={({ field }) => (
                                                         <FormItem className="flex-1 mr-4">
                                                             <FormControl>
-                                                                <Input {...field} className="font-bold border-none px-0 h-auto focus-visible:ring-0 text-zinc-900" placeholder="Category Name (e.g. Deployment Mode)" />
+                                                                <Input {...field} value={field.value ?? ""} className="font-bold border-none px-0 h-auto focus-visible:ring-0 text-zinc-900" placeholder="Category Name (e.g. Deployment Mode)" />
                                                             </FormControl>
                                                         </FormItem>
                                                     )}
@@ -586,7 +579,7 @@ function DesignOptionChoices({ serviceIndex, groupIndex, control }: any) {
                                 render={({ field }) => (
                                     <FormItem className="flex-1">
                                         <FormControl>
-                                            <Input {...field} className="h-9 py-0 font-medium bg-white border-zinc-200 focus-visible:ring-1 focus-visible:ring-blue-500 shadow-sm" placeholder="Choice Name" />
+                                            <Input {...field} value={field.value ?? ""} className="h-9 py-0 font-medium bg-white border-zinc-200 focus-visible:ring-1 focus-visible:ring-blue-500 shadow-sm" placeholder="Choice Name" />
                                         </FormControl>
                                     </FormItem>
                                 )}
@@ -610,7 +603,7 @@ function DesignOptionChoices({ serviceIndex, groupIndex, control }: any) {
                                     <FormItem>
                                         <FormLabel className="text-xs text-zinc-600">Short Description</FormLabel>
                                         <FormControl>
-                                            <Input {...field} className="h-8 py-0 text-sm bg-white" placeholder="Brief description of this choice" />
+                                            <Input {...field} value={field.value ?? ""} className="h-8 py-0 text-sm bg-white" placeholder="Brief description of this choice" />
                                         </FormControl>
                                     </FormItem>
                                 )}
@@ -625,6 +618,7 @@ function DesignOptionChoices({ serviceIndex, groupIndex, control }: any) {
                                         <FormControl>
                                             <Textarea
                                                 {...field}
+                                                value={field.value ?? ""}
                                                 placeholder="Comprehensive description of this choice..."
                                                 className="min-h-[80px] text-sm bg-white"
                                             />
