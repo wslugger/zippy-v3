@@ -69,9 +69,9 @@ const COLLATERAL_ICONS: Record<CollateralType, React.ElementType> = {
 };
 
 const DESIGNATION_STYLES: Record<InclusionDesignation, string> = {
-    required: "bg-zinc-900 text-white border-zinc-900 shadow-sm",
+    required: "bg-primary text-primary-foreground border-primary shadow-sm",
     standard: "bg-blue-600 text-white border-blue-600 shadow-sm",
-    optional: "bg-white text-zinc-800 border-zinc-300 shadow-sm",
+    optional: "bg-white text-foreground border-border shadow-sm",
 };
 
 const emptyCollateral = (): Collateral => ({ title: "", url: "", type: "PDF" });
