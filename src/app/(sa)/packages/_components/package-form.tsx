@@ -690,7 +690,7 @@ export function PackageForm({ package: pkg, services }: PackageFormProps) {
                             value={slug}
                             onChange={(e) => setSlug(e.target.value)}
                             placeholder="enterprise-network"
-                            pattern="^[a-z0-9-]+$"
+                            pattern="^[a-z0-9\-_]+$"
                             title="Lowercase letters, numbers, and hyphens only"
                             required
                         />

@@ -135,7 +135,7 @@ export const CreatePackageSchema = z.object({
   slug: z
     .string()
     .min(1, "Slug is required")
-    .regex(/^[a-z0-9-_]+$/, "Slug must be lowercase letters, numbers, hyphens, and underscores only"),
+    .regex(/^[a-z0-9\-_]+$/, "Slug must be lowercase letters, numbers, hyphens, and underscores only"),
   shortDescription: z.string().min(1, "Short description is required"),
   description: z.string().default(""),
   includedServices: z.array(PackageServiceInclusionSchema).default([]),
