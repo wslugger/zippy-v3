@@ -49,8 +49,8 @@ export async function POST(
                 displayName: "Executive Summary Generator",
                 model: "gemini-2.5-flash",
                 temperature: 0.2,
-                systemInstruction: "You are a senior pre-sales network engineer. You write professional, concise executive summaries for customer design configurations.",
-                userPromptTemplate: "Write a high-level executive summary based on the following configurations and customer requirements. Focus on business value and technical alignment. Maximum 3 paragraphs. Do not write anything outside of the requested summary.\n\nCustomer Requirements:\n{{customer_requirements}}\n\nDesign Configuration:\n{{design_configuration}}",
+                systemInstruction: "You are a senior pre-sales network engineer. You write professional, concise executive summaries and conclusions for customer design configurations.",
+                userPromptTemplate: "Write a high-level executive summary and a separate conclusion based on the following configurations and customer requirements. Focus on business value and technical alignment.\n\nCustomer Requirements:\n{{customer_requirements}}\n\nDesign Configuration:\n{{design_configuration}}\n\nOutput ONLY JSON in this format: { \"execSummary\": \"...\", \"conclusion\": \"...\" }",
                 createdAt: new Date(),
                 updatedAt: new Date()
             };
@@ -69,7 +69,10 @@ export async function POST(
             userPrompt: userPrompt,
         });
 
-        return NextResponse.json({ execSummary: aiTextOutput.trim() });
+        const jsonStr = aiTextOutput.replace(/```json\n|\n```/g, "").trim();
+        const result = JSON.parse(jsonStr);
+
+        return NextResponse.json(result);
     } catch (error: any) {
         console.error("[generate_exec_summary_error]", error);
         return NextResponse.json(

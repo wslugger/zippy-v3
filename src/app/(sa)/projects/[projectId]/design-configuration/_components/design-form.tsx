@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Trash2, Save, Wand2 } from "lucide-react";
+import { Trash2, Save, Wand2, Sparkles, Check } from "lucide-react";
 import { toast } from "sonner";
 import {
     Card, CardContent, CardDescription, CardFooter,
@@ -20,7 +20,8 @@ import { Textarea } from "@/components/ui/textarea";
 export function DesignForm({ project, packageData, services, features }: any) {
     const router = useRouter();
     const [isSaving, setIsSaving] = useState(false);
-    const [isGeneratingProxy, setIsGeneratingProxy] = useState(false); // mock AI generation
+    const [isGeneratingProxy, setIsGeneratingProxy] = useState(false);
+    const [isAutoSelecting, setIsAutoSelecting] = useState(false);
 
     const inclusions = packageData.includedServices || [];
 
@@ -34,6 +35,7 @@ export function DesignForm({ project, packageData, services, features }: any) {
         const servicesState = exclusionsToState(inclusions);
         return {
             execSummary: "This is a placeholder Exec Summary based on your selections.",
+            conclusion: "Conclusion placeholder.",
             services: servicesState,
         };
     };
@@ -66,6 +68,49 @@ export function DesignForm({ project, packageData, services, features }: any) {
     };
 
     const [formState, setFormState] = useState<any>(initializeState());
+
+    const handleAutoSelect = async () => {
+        setIsAutoSelecting(true);
+        try {
+            const res = await fetch(`/api/projects/${project.id}/design/auto-select`, {
+                method: "POST",
+            });
+            if (!res.ok) throw new Error("Auto-select failed");
+            const data = await res.json();
+
+            // data.services is an array of recommendations
+            setFormState((prev: any) => ({
+                ...prev,
+                services: prev.services.map((s: any) => {
+                    const rec = data.services.find((r: any) => r.serviceId === s.serviceId);
+                    if (!rec) return s;
+
+                    // Mark which items were recommended
+                    const aiRecommended: Record<string, boolean> = {};
+                    rec.selectedOptions.forEach((oid: string) => aiRecommended[oid] = true);
+                    Object.entries(rec.selectedDesignChoices).forEach(([gid, vals]: [string, any]) => {
+                        vals.forEach((v: string) => aiRecommended[`${gid}-${v}`] = true);
+                    });
+
+                    return {
+                        ...s,
+                        selectedOptions: Array.from(new Set([...s.selectedOptions, ...rec.selectedOptions])),
+                        selectedDesignChoices: {
+                            ...s.selectedDesignChoices,
+                            ...rec.selectedDesignChoices
+                        },
+                        aiRecommended,
+                        reasoning: rec.reasoning
+                    };
+                })
+            }));
+            toast.success("AI suggests the following configuration based on requirements.");
+        } catch (err) {
+            toast.error("AI auto-select failed");
+        } finally {
+            setIsAutoSelecting(false);
+        }
+    };
 
     const handleSave = async (completeModule: boolean = false) => {
         setIsSaving(true);
@@ -127,6 +172,10 @@ export function DesignForm({ project, packageData, services, features }: any) {
                     <TabsTrigger value="review">Review & Output</TabsTrigger>
                 </TabsList>
                 <div className="flex gap-2">
+                    <Button variant="secondary" onClick={handleAutoSelect} disabled={isAutoSelecting || isSaving}>
+                        <Sparkles className="mr-2 h-4 w-4" />
+                        {isAutoSelecting ? "Analyzing..." : "Auto-Suggest Design"}
+                    </Button>
                     <Button variant="outline" onClick={() => handleSave(false)} disabled={isSaving}>
                         <Save className="mr-2 h-4 w-4" /> Save Draft
                     </Button>
@@ -183,6 +232,11 @@ export function DesignForm({ project, packageData, services, features }: any) {
                                                                 disabled={isRequired}
                                                                 className="mt-1"
                                                             />
+                                                            {sState.aiRecommended?.[optInc.optionId] && (
+                                                                <div className="mt-1 text-primary animate-pulse" title="Recommended from requirements">
+                                                                    <Sparkles size={16} />
+                                                                </div>
+                                                            )}
                                                             <div className="space-y-1 w-full">
                                                                 <Label htmlFor={`opt-${optInc.optionId}`} className="text-base font-medium leading-none cursor-pointer flex justify-between">
                                                                     <span>{optionDef?.name || "Unknown Option"}</span>
@@ -238,6 +292,11 @@ export function DesignForm({ project, packageData, services, features }: any) {
                                                                                 onCheckedChange={toggleChoice}
                                                                                 disabled={isRequired}
                                                                             />
+                                                                            {sState.aiRecommended?.[`${groupId}-${choiceInc.choiceValue}`] && (
+                                                                                <div className="text-primary animate-pulse" title="Recommended from requirements">
+                                                                                    <Sparkles size={14} />
+                                                                                </div>
+                                                                            )}
                                                                             <Label htmlFor={`choice-${choiceInc.choiceValue}`} className="cursor-pointer">
                                                                                 {choiceInc.choiceValue}
                                                                             </Label>
@@ -294,8 +353,12 @@ export function DesignForm({ project, packageData, services, features }: any) {
                                     });
                                     if (!res.ok) throw new Error("Generation failed");
                                     const data = await res.json();
-                                    setFormState((prev: any) => ({ ...prev, execSummary: data.execSummary }));
-                                    toast.success("Executive Summary generated!");
+                                    setFormState((prev: any) => ({
+                                        ...prev,
+                                        execSummary: data.execSummary,
+                                        conclusion: data.conclusion
+                                    }));
+                                    toast.success("Design output generated!");
                                 } catch (error) {
                                     toast.error("Failed to generate summary with AI");
                                 } finally {
@@ -317,6 +380,60 @@ export function DesignForm({ project, packageData, services, features }: any) {
                 </Card>
 
                 {/* Caveats and Assumptions could be aggregated here */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Detailed Design Output</CardTitle>
+                        <CardDescription>Chosen services and options in this package</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        {formState.services.map((sState: any) => {
+                            const inc = inclusions.find((i: any) => i.serviceId === sState.serviceId);
+                            const serviceDef = services.find((s: any) => s.id === sState.serviceId);
+                            if (!inc || !serviceDef) return null;
+
+                            return (
+                                <div key={sState.serviceId} className="space-y-2 border-b pb-4 last:border-0">
+                                    <h4 className="font-bold text-lg">{inc.serviceName}</h4>
+                                    <p className="text-sm text-muted-foreground mb-2">{serviceDef.shortDescription}</p>
+
+                                    {sState.selectedOptions.length > 0 && (
+                                        <div className="pl-4 space-y-1">
+                                            <p className="text-xs font-semibold uppercase text-muted-foreground">Chosen Options:</p>
+                                            {sState.selectedOptions.map((oid: string) => {
+                                                const oDef = serviceDef.serviceOptions.find((so: any) => so.optionId === oid);
+                                                return <div key={oid} className="text-sm flex items-center gap-2"><Check size={14} className="text-green-600" /> {oDef?.name}</div>;
+                                            })}
+                                        </div>
+                                    )}
+
+                                    {Object.entries(sState.selectedDesignChoices).some(([_, v]: any) => v.length > 0) && (
+                                        <div className="pl-4 space-y-1 mt-2">
+                                            <p className="text-xs font-semibold uppercase text-muted-foreground">Design Choices:</p>
+                                            {Object.entries(sState.selectedDesignChoices).map(([gid, vals]: [string, any]) => (
+                                                vals.map((v: string) => <div key={`${gid}-${v}`} className="text-sm flex items-center gap-2"><Check size={14} className="text-blue-600" /> {gid}: {v}</div>)
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Conclusion</CardTitle>
+                        <CardDescription>Final thoughts and alignment.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Textarea
+                            value={formState.conclusion}
+                            onChange={(e) => setFormState((p: any) => ({ ...p, conclusion: e.target.value }))}
+                            className="min-h-[100px]"
+                        />
+                    </CardContent>
+                </Card>
+
                 <Card>
                     <CardHeader>
                         <CardTitle>Appendix: Caveats & Assumptions</CardTitle>
