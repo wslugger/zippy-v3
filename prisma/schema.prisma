@@ -67,7 +67,7 @@ model Project {
   customerName      String
   description       String?  @default("")
   status            String   @default("draft")
-  moduleStates      Json
+  moduleStates      Json     @default("{\"ingestion\":\"pending\",\"configuration\":\"locked\",\"bomGeneration\":\"locked\",\"hldGeneration\":\"locked\"}")
 
   // Module 1 output
   selectedPackageId String?  @db.ObjectId

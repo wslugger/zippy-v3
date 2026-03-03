@@ -89,7 +89,7 @@ export default async function ProjectOverviewPage({
       </Card>
 
       {/* Module 2: Design Configuration */}
-      <Card>
+      <Card className={`relative overflow-hidden border-zinc-200 ${moduleStates?.configuration === "locked" ? 'opacity-60 grayscale bg-zinc-50' : ''}`}>
         <CardHeader>
           <CardTitle>Design Configuration</CardTitle>
         </CardHeader>
@@ -97,11 +97,17 @@ export default async function ProjectOverviewPage({
           <p className="text-sm text-muted-foreground">
             Configure the customer design options and output the Exec Summary.
           </p>
-          <Link href={`/projects/${projectId}/design-configuration`}>
-            <Button disabled={!project.packageName}>
-              {moduleStates?.configuration === "completed" ? "Review Configuration" : "Configure Design"}
+          {moduleStates?.configuration === "locked" ? (
+            <Button disabled className="w-full sm:w-auto">
+              Prerequisites Required
             </Button>
-          </Link>
+          ) : (
+            <Link href={`/projects/${projectId}/design-configuration`}>
+              <Button disabled={!project.packageName} className="w-full sm:w-auto">
+                {moduleStates?.configuration === "completed" ? "Review Configuration" : "Configure Design"}
+              </Button>
+            </Link>
+          )}
         </CardContent>
       </Card>
     </div>

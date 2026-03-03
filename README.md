@@ -38,8 +38,10 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 ## AI Prompt Management
 
 **CRITICAL DEVELOPMENT RULE:**
-Every time an AI feature (LLM call) is added or modified in the Zippy v3 platform, it **must** be registered and managed through the central **AI Prompts Control** page (`/settings/prompts`).
+Every AI feature (LLM call) added to Zippy v3 **must** be managed via the **AI Prompts Control** page (`/settings/prompts`).
 
-1. **Do not hardcode prompts:** All system instructions and user prompt templates must be fetched from the `AIPrompt` database model.
-2. **Setup a new Prompt:** If you are building a new AI feature, create a new tab in `src/app/(sa)/settings/prompts/_components/prompts-form.tsx` and define its expected dynamically injected `TEMPLATE_VARIABLES`.
-3. **Fallback Logic:** Ensure your API routes have a sensible fallback defined in code in case the `AIPrompt` database record is missing (to prevent complete feature failure during initial deployment).
+1. **No Hardcoded Prompts:** Fetch all system instructions and templates from the `AIPrompt` model.
+2. **Mandatory Registration:** Add a new tab in `src/app/(sa)/settings/prompts/_components/prompts-form.tsx` for every unique LLM use case.
+3. **Strict JSON Mode:** Always set `responseMimeType: "application/json"` in `callGemini` to prevent "chatty" responses from breaking parsers.
+4. **Key Normalization:** Implement fallback keys in your parser (e.g., `data.execSummary || data.exec_summary`) to handle model naming fluctuations.
+5. **Safe Fallbacks:** Always define a "code fallback" prompt configuration in your API route so the feature works even if the database hasn't been seeded yet.

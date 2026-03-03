@@ -12,6 +12,8 @@ const richTextFields = {
 // ---- Module State Tracking ----
 export const ModuleStateEnum = z.enum([
   "not_started",
+  "pending",
+  "locked",
   "in_progress",
   "completed",
   "out_of_date",
