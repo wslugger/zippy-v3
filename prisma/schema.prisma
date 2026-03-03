@@ -14,7 +14,7 @@ model GlobalTaxonomy {
   id              String   @id @default(auto()) @map("_id") @db.ObjectId
   slug            String   @unique @default("global_taxonomy_v1")
   collateralTypes String[]
-  extraFields     Json?    // Stores any user-added categories not in the hardcoded columns
+  extraFields     Json? // Stores any user-added categories not in the hardcoded columns
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -50,8 +50,8 @@ model Package {
   name             String
   shortDescription String
   description      String
-  includedServices Json[]   // Array of PackageInclusion (service, options, features + designation)
-  collateral       Json[]   // Up to 4 collateral items { title, url, type }
+  includedServices Json[] // Array of PackageInclusion (service, options, features + designation)
+  collateral       Json[] // Up to 4 collateral items { title, url, type }
   isActive         Boolean  @default(true)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
@@ -63,33 +63,33 @@ model Package {
 // PROJECT LEDGER (Central state document)
 // ============================================================
 model Project {
-  id                String   @id @default(auto()) @map("_id") @db.ObjectId
-  customerName      String
-  description       String?  @default("")
-  status            String   @default("draft")
-  moduleStates      Json     @default("{\"ingestion\":\"pending\",\"configuration\":\"locked\",\"bomGeneration\":\"locked\",\"hldGeneration\":\"locked\"}")
+  id           String  @id @default(auto()) @map("_id") @db.ObjectId
+  customerName String
+  description  String? @default("")
+  status       String  @default("draft")
+  moduleStates Json    @default("{\"ingestion\":\"pending\",\"configuration\":\"locked\",\"bomGeneration\":\"locked\",\"hldGeneration\":\"locked\"}")
 
   // Module 1 output
-  selectedPackageId String?  @db.ObjectId
+  selectedPackageId String? @db.ObjectId
   packageSlug       String?
   packageName       String?
   packageReasoning  String?
   packageCollateral Json[]
 
   // AI recommendation result (Module 1 assist)
-  aiRecommendation  Json?    // { packageId, confidence, reasoning }
+  aiRecommendation Json? // { packageId, confidence, reasoning }
 
   // Module 2 output (stub)
   designConfiguration Json?
 
   // Module 3 output (stub)
-  bomSnapshot       Json[]
+  bomSnapshot Json[]
 
   // Sites (populated later)
-  sites             Json[]
+  sites Json[]
 
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("projects")
 }
@@ -100,8 +100,8 @@ model Project {
 // ============================================================
 model AIPrompt {
   id                 String   @id @default(auto()) @map("_id") @db.ObjectId
-  slug               String   @unique          // e.g. "package_selection"
-  displayName        String                    // "Package Selection"
+  slug               String   @unique // e.g. "package_selection"
+  displayName        String // "Package Selection"
   model              String   @default("gemini-3-flash-preview")
   temperature        Float    @default(0.1)
   systemInstruction  String
@@ -119,9 +119,9 @@ model AIPrompt {
 model CustomerRequirement {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   projectId String   @db.ObjectId
-  source    String                    // "upload" | "chat"
-  fileName  String?                   // original filename if uploaded
-  rawText   String                    // extracted text content
+  source    String // "upload" | "chat"
+  fileName  String? // original filename if uploaded
+  rawText   String // extracted text content
   createdAt DateTime @default(now())
 
   @@map("customer_requirements")
@@ -145,3 +145,35 @@ model Feature {
   @@map("features")
 }
 
+// ============================================================
+// EQUIPMENT CATALOG
+// Base configuration for BOMs
+// ============================================================
+model Equipment {
+  id       String  @id @default(auto()) @map("_id") @db.ObjectId
+  make     String
+  vendorId String?
+  model    String
+  family   String
+  role     String // Represents primary_purpose (WAN, LAN, WLAN, SECURITY, etc.)
+
+  // Service Catalog Mapping
+  service       String // E.g., "Managed LAN"
+  serviceOption String // E.g., "Meraki switching"
+
+  // Lifecycle Management
+  active  Boolean   @default(true)
+  status  String // Managed via Taxonomy
+  eosDate DateTime?
+
+  // Financials - Embedded JSON to handle 2-axis structures
+  pricing Json // { purchasePrice: number, rentalPrice: number, managementSize: string ("Small"|"Medium"|"Large") }
+
+  // Technical Specs - Polymorphic payload specific to the 'role'
+  specs Json
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("equipment")
+}

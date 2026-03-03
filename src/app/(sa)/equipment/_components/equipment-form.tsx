@@ -21,14 +21,17 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { useMemo } from "react";
 import { CreateEquipmentSchema, EquipmentPayload } from "@/lib/zod/equipment";
 
 export function EquipmentForm({
     initialData,
     taxonomy,
+    services = [],
 }: {
     initialData?: any;
     taxonomy?: any;
+    services?: any[];
 }) {
     const router = useRouter();
     const [isSaving, setIsSaving] = useState(false);
@@ -66,6 +69,13 @@ export function EquipmentForm({
     });
 
     const selectedRole = form.watch("role");
+    const selectedService = form.watch("service");
+
+    const availableOptions = useMemo(() => {
+        if (!selectedService) return [];
+        const s = services.find(svc => svc.name === selectedService);
+        return s?.serviceOptions || [];
+    }, [selectedService, services]);
 
     const onSubmit = async (data: EquipmentPayload) => {
         setIsSaving(true);
@@ -162,7 +172,7 @@ export function EquipmentForm({
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Role (Discriminator)</FormLabel>
-                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <Select onValueChange={field.onChange} value={field.value}>
                                         <FormControl>
                                             <SelectTrigger>
                                                 <SelectValue placeholder="Select a primary technical role" />
@@ -184,7 +194,7 @@ export function EquipmentForm({
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Status</FormLabel>
-                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <Select onValueChange={field.onChange} value={field.value}>
                                         <FormControl>
                                             <SelectTrigger>
                                                 <SelectValue placeholder="Select status" />
@@ -257,9 +267,24 @@ export function EquipmentForm({
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Service Mapping</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder="e.g., Managed LAN" {...field} />
-                                    </FormControl>
+                                    <Select
+                                        onValueChange={(val) => {
+                                            field.onChange(val);
+                                            form.setValue("serviceOption", ""); // Reset option on service change
+                                        }}
+                                        value={field.value}
+                                    >
+                                        <FormControl>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select Service" />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            {services.map((s: any) => (
+                                                <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                     <FormMessage />
                                 </FormItem>
                             )}
@@ -270,9 +295,22 @@ export function EquipmentForm({
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Service Option Mapping</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder="e.g., Meraki switching" {...field} />
-                                    </FormControl>
+                                    <Select
+                                        onValueChange={field.onChange}
+                                        value={field.value}
+                                        disabled={!selectedService}
+                                    >
+                                        <FormControl>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder={selectedService ? "Select Option" : "Select Service First"} />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            {availableOptions.map((opt: any) => (
+                                                <SelectItem key={opt.optionId} value={opt.name}>{opt.name}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                     <FormMessage />
                                 </FormItem>
                             )}
@@ -321,7 +359,7 @@ export function EquipmentForm({
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Management Tier</FormLabel>
-                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <Select onValueChange={field.onChange} value={field.value}>
                                         <FormControl>
                                             <SelectTrigger>
                                                 <SelectValue placeholder="Size" />
@@ -360,93 +398,127 @@ export function EquipmentForm({
                             )}
 
                             {selectedRole?.includes("WAN") && (
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    <FormField
-                                        control={form.control}
-                                        name="specs.rawFirewallThroughputMbps"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Firewall Throughput (Mbps)</FormLabel>
-                                                <FormControl>
-                                                    {/* @ts-ignore */}
-                                                    <Input type="number" {...field} value={field.value || ""} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} />
-                                                </FormControl>
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={form.control}
-                                        name="specs.sdwanCryptoThroughputMbps"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>SD-WAN Crypto Throughput</FormLabel>
-                                                <FormControl>
-                                                    {/* @ts-ignore */}
-                                                    <Input type="number" {...field} value={field.value || ""} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} />
-                                                </FormControl>
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={form.control}
-                                        name="specs.wanPortCount"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>WAN Port Count</FormLabel>
-                                                <FormControl>
-                                                    {/* @ts-ignore */}
-                                                    <Input type="number" {...field} value={field.value || ""} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} />
-                                                </FormControl>
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={form.control}
-                                        name="specs.wanPortType"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>WAN Port Type</FormLabel>
-                                                <Select onValueChange={field.onChange} defaultValue={field.value as string}>
+                                <div className="space-y-6">
+                                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                        <FormField
+                                            control={form.control}
+                                            name="specs.rawFirewallThroughputMbps"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel className="uppercase font-semibold text-xs tracking-wider">Raw Firewall (Mbps)</FormLabel>
+                                                    <p className="text-[0.8rem] text-muted-foreground mt-1 mb-2 leading-relaxed">
+                                                        <span className="font-semibold text-zinc-700">Guidance:</span> Clear-text stateful firewall routing without VPNs or IPS.
+                                                    </p>
                                                     <FormControl>
-                                                        <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
+                                                        {/* @ts-ignore */}
+                                                        <Input type="number" {...field} value={field.value || ""} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} />
                                                     </FormControl>
-                                                    <SelectContent>
-                                                        {portTypes.map((pt: string) => <SelectItem key={pt} value={pt}>{pt}</SelectItem>)}
-                                                    </SelectContent>
-                                                </Select>
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={form.control}
-                                        name="specs.lanPortCount"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>LAN Port Count</FormLabel>
-                                                <FormControl>
-                                                    {/* @ts-ignore */}
-                                                    <Input type="number" {...field} value={field.value || ""} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} />
-                                                </FormControl>
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={form.control}
-                                        name="specs.lanPortType"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>LAN Port Type</FormLabel>
-                                                <Select onValueChange={field.onChange} defaultValue={field.value as string}>
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name="specs.sdwanCryptoThroughputMbps"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel className="uppercase font-semibold text-xs tracking-wider">SD-WAN Crypto (Mbps)</FormLabel>
+                                                    <p className="text-[0.8rem] text-muted-foreground mt-1 mb-2 leading-relaxed">
+                                                        <span className="font-semibold text-zinc-700">Guidance:</span> Throughput with tunnels built but security handled off-box. Look for 'VPN throughput', 'IPsec IMIX', or 'SD-WAN Routing' (e.g. Meraki VPN, Cisco IPsec, HPE Silver Peak)
+                                                    </p>
                                                     <FormControl>
-                                                        <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
+                                                        {/* @ts-ignore */}
+                                                        <Input type="number" {...field} value={field.value || ""} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} />
                                                     </FormControl>
-                                                    <SelectContent>
-                                                        {portTypes.map((pt: string) => <SelectItem key={pt} value={pt}>{pt}</SelectItem>)}
-                                                    </SelectContent>
-                                                </Select>
-                                            </FormItem>
-                                        )}
-                                    />
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name="specs.advancedSecurityThroughputMbps"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel className="uppercase font-semibold text-xs tracking-wider">Advanced Security (Mbps)</FormLabel>
+                                                    <p className="text-[0.8rem] text-muted-foreground mt-1 mb-2 leading-relaxed">
+                                                        <span className="font-semibold text-zinc-700">Guidance:</span> Throughput with on-box deep packet inspection (IDS/IPS) active. Look for 'Threat Defense', 'IDS/IPS', or 'Advanced Security' (e.g. Meraki Adv. Sec, Cisco Threat Defense, HPE Aruba).
+                                                    </p>
+                                                    <FormControl>
+                                                        {/* @ts-ignore */}
+                                                        <Input type="number" {...field} value={field.value || ""} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} />
+                                                    </FormControl>
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                        <div className="grid grid-cols-2 gap-4 col-span-2">
+                                            <FormField
+                                                control={form.control}
+                                                name="specs.wanPortCount"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel>WAN Port Count</FormLabel>
+                                                        <FormControl>
+                                                            {/* @ts-ignore */}
+                                                            <Input type="number" {...field} value={field.value || ""} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} />
+                                                        </FormControl>
+                                                    </FormItem>
+                                                )}
+                                            />
+                                            <FormField
+                                                control={form.control}
+                                                name="specs.wanPortType"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel>WAN Port Type</FormLabel>
+                                                        <Select onValueChange={field.onChange} value={field.value as string}>
+                                                            <FormControl>
+                                                                <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
+                                                            </FormControl>
+                                                            <SelectContent>
+                                                                {portTypes.map((pt: string) => <SelectItem key={pt} value={pt}>{pt}</SelectItem>)}
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </FormItem>
+                                                )}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                        <div className="grid grid-cols-2 gap-4 col-span-2">
+                                            <FormField
+                                                control={form.control}
+                                                name="specs.lanPortCount"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel>LAN Port Count</FormLabel>
+                                                        <FormControl>
+                                                            {/* @ts-ignore */}
+                                                            <Input type="number" {...field} value={field.value || ""} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} />
+                                                        </FormControl>
+                                                    </FormItem>
+                                                )}
+                                            />
+                                            <FormField
+                                                control={form.control}
+                                                name="specs.lanPortType"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel>LAN Port Type</FormLabel>
+                                                        <Select onValueChange={field.onChange} value={field.value as string}>
+                                                            <FormControl>
+                                                                <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
+                                                            </FormControl>
+                                                            <SelectContent>
+                                                                {portTypes.map((pt: string) => <SelectItem key={pt} value={pt}>{pt}</SelectItem>)}
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </FormItem>
+                                                )}
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
                             )}
 
@@ -471,7 +543,7 @@ export function EquipmentForm({
                                         render={({ field }) => (
                                             <FormItem>
                                                 <FormLabel>Access Port Type</FormLabel>
-                                                <Select onValueChange={field.onChange} defaultValue={field.value as string}>
+                                                <Select onValueChange={field.onChange} value={field.value as string}>
                                                     <FormControl>
                                                         <SelectTrigger><SelectValue placeholder="Physical Media" /></SelectTrigger>
                                                     </FormControl>
@@ -545,7 +617,7 @@ export function EquipmentForm({
                                         render={({ field }) => (
                                             <FormItem>
                                                 <FormLabel>Target Environment</FormLabel>
-                                                <Select onValueChange={field.onChange} defaultValue={field.value as string}>
+                                                <Select onValueChange={field.onChange} value={field.value as string}>
                                                     <FormControl>
                                                         <SelectTrigger><SelectValue placeholder="Where is it deployed?" /></SelectTrigger>
                                                     </FormControl>

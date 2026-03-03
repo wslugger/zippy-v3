@@ -16,9 +16,20 @@ export default async function TaxonomyPage() {
     let initialData: Record<string, string[]> = {};
 
     if (taxonomy) {
+        const defaultExtras: Record<string, string[]> = {
+            equipmentRoles: ["WAN", "LAN", "WLAN", "SECURITY"],
+            equipmentStatus: ["Available", "EOS", "EOL"],
+            managementSizes: ["Small", "Medium", "Large"],
+            environments: ["Indoor", "Outdoor"],
+            portTypes: ["10/100/1000", "1/2.5/5/10 Gbps", "10G SFP+", "40G QSFP"],
+        };
+
+        const dbExtras = (taxonomy.extraFields as Record<string, string[]> | null) ?? {};
+
         const allData: Record<string, string[]> = {
             collateralTypes: taxonomy.collateralTypes || [],
-            ...(taxonomy.extraFields as Record<string, string[]> | null ?? {}),
+            ...defaultExtras,
+            ...dbExtras,
         };
 
         initialData = Object.fromEntries(
