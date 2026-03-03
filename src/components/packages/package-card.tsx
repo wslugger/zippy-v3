@@ -119,21 +119,22 @@ export function PackageCard({ pkg, projectId, isSelected, isRecommended = false,
                 </div>
 
                 {/* Options List */}
-                {svc.includedOptions && svc.includedOptions.length > 0 && (
-                  <ul className="pl-4 space-y-1 border-l-2 border-zinc-100/80">
-                    {svc.includedOptions.map((opt) => {
-                      const catalogEntry = servicesCatalog?.find((s: any) => s.id === svc.serviceId || s.slug === svc.serviceSlug);
-                      const optDef = catalogEntry?.serviceOptions?.find((o: any) => o.optionId === opt.optionId);
-                      const optionName = optDef?.name || opt.optionId;
-
-                      return (
-                        <li key={opt.optionId} className="text-xs text-zinc-600 flex items-center justify-between group/opt">
-                          <span className="line-clamp-1 flex-1 pr-2">{optionName}</span>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
+                {svc.includedOptions && svc.includedOptions.length > 0 && (() => {
+                  const catalogEntry = servicesCatalog?.find((s: any) => s.id === svc.serviceId || s.slug === svc.serviceSlug);
+                  return (
+                    <ul className="pl-4 space-y-1 border-l-2 border-zinc-100/80">
+                      {svc.includedOptions.map((opt) => {
+                        const optDef = catalogEntry?.serviceOptions?.find((o: any) => o.optionId === opt.optionId);
+                        const optionName = optDef?.name || opt.optionId;
+                        return (
+                          <li key={opt.optionId} className="text-xs text-zinc-600 flex items-center justify-between group/opt">
+                            <span className="line-clamp-1 flex-1 pr-2">{optionName}</span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  );
+                })()}
               </div>
             ))}
           </div>

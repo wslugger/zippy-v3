@@ -30,15 +30,16 @@ const TEMPLATE_VARIABLES: Record<string, { label: string; color: string }> = {
     "{sitesToClassify}": { label: "Raw site data from CSV", color: "text-amber-600" },
     "{payloadJSON}": { label: "Full HLD input payload", color: "text-rose-600" },
     "{customerName}": { label: "Project customer", color: "text-indigo-600" },
+    "{{customer_requirements}}": { label: "Raw customer requirements", color: "text-orange-600" },
+    "{{design_inventory}}": { label: "Available package design choices", color: "text-teal-600" },
+    "{{design_configuration}}": { label: "Current active configuration state", color: "text-fuchsia-600" },
 };
 
 // Stubs for future tabs
 const PROMPT_TABS = [
     { slug: "package_selection", label: "Package Selection" },
-    { slug: "recommended_design", label: "Recommended Design", stub: true },
-    { slug: "package_chat", label: "Package Chat (Consultant)", stub: true },
-    { slug: "hld_generation", label: "HLD Generation", stub: true },
-    { slug: "bom_logic_rules", label: "BOM Logic Rules", stub: true },
+    { slug: "design_auto_select", label: "Auto Suggest Design" },
+    { slug: "design_exec_summary", label: "Generate w/ AI" },
 ];
 
 export function PromptsForm() {
@@ -56,11 +57,6 @@ export function PromptsForm() {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        if (PROMPT_TABS.find((t) => t.slug === activeTab)?.stub) {
-            setLoading(false);
-            setPrompt(null);
-            return;
-        }
         setLoading(true);
         setError(null);
         fetch(`/api/settings/prompts/${activeTab}`)
@@ -111,8 +107,6 @@ export function PromptsForm() {
         });
     }
 
-    const isStub = PROMPT_TABS.find((t) => t.slug === activeTab)?.stub;
-
     return (
         <div className="space-y-6">
             <Card>
@@ -122,15 +116,12 @@ export function PromptsForm() {
                         {PROMPT_TABS.map((tab) => (
                             <button
                                 key={tab.slug}
-                                onClick={() => !tab.stub && setActiveTab(tab.slug)}
+                                onClick={() => setActiveTab(tab.slug)}
                                 className={cn(
                                     "px-4 py-2.5 text-sm font-medium border-b-2 -mb-px whitespace-nowrap transition-colors",
                                     activeTab === tab.slug
                                         ? "border-primary text-primary"
-                                        : "border-transparent text-muted-foreground",
-                                    tab.stub
-                                        ? "opacity-50 cursor-not-allowed"
-                                        : "hover:text-foreground hover:border-muted-foreground/30"
+                                        : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground/30"
                                 )}
                             >
                                 {tab.label}
@@ -143,11 +134,6 @@ export function PromptsForm() {
                     {loading ? (
                         <div className="flex items-center justify-center h-40">
                             <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                        </div>
-                    ) : isStub ? (
-                        <div className="flex flex-col items-center justify-center h-40 text-muted-foreground text-sm gap-2">
-                            <Info className="h-6 w-6" />
-                            <p>This prompt will be configured in a future phase.</p>
                         </div>
                     ) : (
                         <div className="space-y-6">

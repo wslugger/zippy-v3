@@ -83,11 +83,18 @@ export async function POST(
             temperature: activePromptConfig.temperature,
             systemInstruction: activePromptConfig.systemInstruction,
             userPrompt: userPrompt,
+            responseMimeType: "application/json",
         });
 
         // Parse AI JSON response
-        // Sometimes Gemini wraps JSON in code blocks
-        const jsonStr = aiResponse.replace(/```json\n|\n```/g, "").trim();
+        // Sometimes Gemini wraps JSON in code blocks or prefixes it with text
+        let jsonStr = aiResponse.replace(/```json\n|\n```/g, "").trim();
+        const startIdx = jsonStr.indexOf('{');
+        const endIdx = jsonStr.lastIndexOf('}');
+        if (startIdx !== -1 && endIdx !== -1) {
+            jsonStr = jsonStr.substring(startIdx, endIdx + 1);
+        }
+
         const recommendations = JSON.parse(jsonStr);
 
         return NextResponse.json(recommendations);

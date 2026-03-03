@@ -7,6 +7,7 @@ export interface GeminiCallOptions {
     temperature: number;
     systemInstruction: string;
     userPrompt: string;
+    responseMimeType?: "text/plain" | "application/json";
 }
 
 /**
@@ -17,12 +18,14 @@ export async function callGemini({
     temperature,
     systemInstruction,
     userPrompt,
+    responseMimeType,
 }: GeminiCallOptions): Promise<string> {
     const response = await ai.models.generateContent({
         model,
         config: {
             temperature,
             systemInstruction,
+            responseMimeType,
         },
         contents: userPrompt,
     });

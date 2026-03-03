@@ -37,12 +37,10 @@ export async function POST(req: Request) {
 
             // Process uploaded files
             const files = formData.getAll("files") as File[];
-            console.log(`DEBUG: Processing ${files.length} files`);
             let successfulExtractions = 0;
 
             for (const file of files) {
                 try {
-                    console.log(`DEBUG: Extracting from ${file.name} (${file.type}, ${file.size} bytes)`);
                     const arrayBuffer = await file.arrayBuffer();
                     const buffer = Buffer.from(arrayBuffer);
                     const text = await extractText(buffer, file.type, file.name);
@@ -51,16 +49,12 @@ export async function POST(req: Request) {
                         successfulExtractions++;
                         sources.push({ source: "upload", fileName: file.name, rawText: text });
                         requirementsText += `\n[Document: ${file.name}]\n${text}\n`;
-                        console.log(`DEBUG: Extracted ${text.length} chars from ${file.name}`);
-                    } else {
-                        console.warn(`DEBUG: Extracted text from ${file.name} is EMPTY`);
                     }
                 } catch (extractErr: any) {
                     console.error(`Error extracting text from ${file.name}:`, extractErr.message);
                     // Continue with other files if one fails
                 }
             }
-            console.log(`DEBUG: Successfully extracted from ${successfulExtractions} out of ${files.length} files`);
 
             if (files.length > 0 && successfulExtractions === 0 && !chatText?.trim()) {
                 return NextResponse.json({

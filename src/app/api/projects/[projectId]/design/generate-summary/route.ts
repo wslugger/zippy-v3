@@ -61,18 +61,33 @@ export async function POST(
             .replace("{{customer_requirements}}", reqText || "None available")
             .replace("{{design_configuration}}", JSON.stringify(designConfiguration, null, 2));
 
-        // 4. Call Gemini
         const aiTextOutput = await callGemini({
             model: promptConfig.model,
             temperature: promptConfig.temperature,
             systemInstruction: promptConfig.systemInstruction,
             userPrompt: userPrompt,
+            responseMimeType: "application/json",
         });
 
-        const jsonStr = aiTextOutput.replace(/```json\n|\n```/g, "").trim();
-        const result = JSON.parse(jsonStr);
+        let jsonStr = aiTextOutput.replace(/```json\n|\n```/g, "").trim();
 
-        return NextResponse.json(result);
+        // Extract the JSON object by finding the first { and last }
+        const startIdx = jsonStr.indexOf('{');
+        const endIdx = jsonStr.lastIndexOf('}');
+        if (startIdx !== -1 && endIdx !== -1) {
+            jsonStr = jsonStr.substring(startIdx, endIdx + 1);
+        }
+
+        const result = JSON.parse(jsonStr);
+        console.log("[generate_exec_summary] raw AI result keys:", Object.keys(result));
+
+        // Normalize keys — Gemini may use snake_case or different naming
+        const normalized = {
+            execSummary: result.execSummary || result.exec_summary || result.executive_summary || result.executiveSummary || "",
+            conclusion: result.conclusion || result.Conclusion || "",
+        };
+
+        return NextResponse.json(normalized);
     } catch (error: any) {
         console.error("[generate_exec_summary_error]", error);
         return NextResponse.json(

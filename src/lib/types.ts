@@ -185,6 +185,7 @@ export type AIRecommendation = z.infer<typeof AIRecommendationSchema>;
 
 export const DesignConfigurationSchema = z.object({
   execSummary: z.string().optional(),
+  conclusion: z.string().optional(),
   services: z.array(z.object({
     serviceId: z.string(),
     selectedOptions: z.array(z.string()),

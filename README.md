@@ -34,3 +34,12 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## AI Prompt Management
+
+**CRITICAL DEVELOPMENT RULE:**
+Every time an AI feature (LLM call) is added or modified in the Zippy v3 platform, it **must** be registered and managed through the central **AI Prompts Control** page (`/settings/prompts`).
+
+1. **Do not hardcode prompts:** All system instructions and user prompt templates must be fetched from the `AIPrompt` database model.
+2. **Setup a new Prompt:** If you are building a new AI feature, create a new tab in `src/app/(sa)/settings/prompts/_components/prompts-form.tsx` and define its expected dynamically injected `TEMPLATE_VARIABLES`.
+3. **Fallback Logic:** Ensure your API routes have a sensible fallback defined in code in case the `AIPrompt` database record is missing (to prevent complete feature failure during initial deployment).

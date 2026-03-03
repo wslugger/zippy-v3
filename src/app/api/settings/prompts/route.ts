@@ -6,10 +6,6 @@ import { z } from "zod";
 /** GET /api/settings/prompts — list all prompts */
 export async function GET() {
     try {
-        if (!prisma.aIPrompt) {
-            console.error("DEBUG: prisma.aIPrompt is missing. Keys:", Object.keys(prisma));
-            return NextResponse.json({ error: "Configuration Error: models missing" }, { status: 500 });
-        }
         const prompts = await prisma.aIPrompt.findMany({ orderBy: { displayName: "asc" } });
         return NextResponse.json(prompts);
     } catch (err: any) {

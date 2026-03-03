@@ -2,7 +2,19 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Trash2, Save, Wand2, Sparkles, Check } from "lucide-react";
+import {
+    Sparkles,
+    Save,
+    ChevronRight,
+    ExternalLink,
+    Check,
+    FileText,
+    BookOpen,
+    AlertCircle,
+    Archive,
+    Layout,
+    RefreshCcw
+} from "lucide-react";
 import { toast } from "sonner";
 import {
     Card, CardContent, CardDescription, CardFooter,
@@ -22,6 +34,8 @@ export function DesignForm({ project, packageData, services, features }: any) {
     const [isSaving, setIsSaving] = useState(false);
     const [isGeneratingProxy, setIsGeneratingProxy] = useState(false);
     const [isAutoSelecting, setIsAutoSelecting] = useState(false);
+    const [openSections, setOpenSections] = useState<string[]>([]);
+    const [activeTab, setActiveTab] = useState("editor");
 
     const inclusions = packageData.includedServices || [];
 
@@ -104,6 +118,14 @@ export function DesignForm({ project, packageData, services, features }: any) {
                     };
                 })
             }));
+
+            // Expand sections with recommendations and switch to editor
+            const sectionsToOpen = data.services
+                .filter((r: any) => (r.selectedOptions?.length || 0) > 0 || Object.keys(r.selectedDesignChoices || {}).length > 0)
+                .map((r: any) => r.serviceId);
+            setOpenSections(sectionsToOpen);
+            setActiveTab("editor");
+
             toast.success("AI suggests the following configuration based on requirements.");
         } catch (err) {
             toast.error("AI auto-select failed");
@@ -165,10 +187,15 @@ export function DesignForm({ project, packageData, services, features }: any) {
     };
 
     return (
-        <Tabs defaultValue="editor" className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             <div className="flex justify-between items-center bg-card p-4 rounded-lg border shadow-sm">
                 <TabsList>
-                    <TabsTrigger value="editor">Editor</TabsTrigger>
+                    <TabsTrigger value="editor" className="flex items-center gap-2">
+                        Editor
+                        {Object.values(formState.services).some((s: any) => Object.keys(s.aiRecommended || {}).length > 0) && (
+                            <Sparkles size={12} className="text-primary animate-pulse" />
+                        )}
+                    </TabsTrigger>
                     <TabsTrigger value="review">Review & Output</TabsTrigger>
                 </TabsList>
                 <div className="flex gap-2">
@@ -186,7 +213,7 @@ export function DesignForm({ project, packageData, services, features }: any) {
             </div>
 
             <TabsContent value="editor" className="space-y-4">
-                <Accordion type="multiple" className="w-full">
+                <Accordion type="multiple" value={openSections} onValueChange={setOpenSections} className="w-full">
                     {inclusions.map((inc: any) => {
                         const serviceDef = services.find((s: any) => s.id === inc.serviceId);
                         if (!serviceDef) return null;
@@ -200,9 +227,30 @@ export function DesignForm({ project, packageData, services, features }: any) {
                                     <div className="flex items-center gap-4 text-left">
                                         <div className="font-semibold text-lg">{inc.serviceName}</div>
                                         <DesignationBadge designation={inc.designation} />
+                                        {Object.keys(sState.aiRecommended || {}).length > 0 && (
+                                            <div className="flex items-center gap-2 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider animate-in fade-in slide-in-from-left-2 duration-500">
+                                                <Sparkles size={12} className="fill-primary/20" />
+                                                AI Recommended
+                                            </div>
+                                        )}
                                     </div>
                                 </AccordionTrigger>
                                 <AccordionContent className="space-y-6 pt-2 pb-6">
+                                    {/* AI Reasoning Banner */}
+                                    {sState.reasoning && (
+                                        <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg flex gap-3 animate-in fade-in slide-in-from-top-2 duration-500">
+                                            <div className="mt-0.5 text-primary shrink-0">
+                                                <Sparkles size={18} />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <p className="text-xs font-bold text-primary uppercase tracking-wider">AI Reasoning</p>
+                                                <p className="text-sm text-zinc-700 leading-relaxed italic">
+                                                    "{sState.reasoning}"
+                                                </p>
+                                            </div>
+                                        </div>
+                                    )}
+
                                     {/* Service Options */}
                                     {inc.includedOptions?.length > 0 && (
                                         <div className="space-y-3">
@@ -245,7 +293,7 @@ export function DesignForm({ project, packageData, services, features }: any) {
                                                     return (
                                                         <div key={optInc.optionId} className="flex gap-4 items-start p-3 border rounded bg-background/50">
                                                             <Checkbox
-                                                                id={`opt-${optInc.optionId}`}
+                                                                id={`opt - ${optInc.optionId} `}
                                                                 checked={isSelected}
                                                                 onCheckedChange={toggleOption}
                                                                 disabled={isRequired}
@@ -257,7 +305,7 @@ export function DesignForm({ project, packageData, services, features }: any) {
                                                                 </div>
                                                             )}
                                                             <div className="space-y-1 w-full">
-                                                                <Label htmlFor={`opt-${optInc.optionId}`} className="text-base font-medium leading-none cursor-pointer flex justify-between">
+                                                                <Label htmlFor={`opt - ${optInc.optionId} `} className="text-base font-medium leading-none cursor-pointer flex justify-between">
                                                                     <span>{optionDef?.name || "Unknown Option"}</span>
                                                                     <DesignationBadge designation={optInc.designation} />
                                                                 </Label>
@@ -284,26 +332,51 @@ export function DesignForm({ project, packageData, services, features }: any) {
                                                     }, {});
 
                                                     const getDesignLabels = (groupId: string, choiceValue: string) => {
+                                                        const slugify = (s: string) => (s || "").toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+                                                        const gidLower = groupId.toLowerCase();
+
                                                         for (const opt of (serviceDef.serviceOptions || []) as any[]) {
                                                             for (const group of (opt.designOptions || []) as any[]) {
-                                                                if (group.groupId === groupId) {
-                                                                    const choice = group.choices?.find((c: any) => c.id === choiceValue || c.value === choiceValue);
+                                                                const currentGidLower = (group.groupId || "").toLowerCase();
+                                                                const groupLabelLower = (group.groupLabel || "").toLowerCase();
+
+                                                                if (currentGidLower === gidLower || groupLabelLower === gidLower) {
+                                                                    const choice = group.choices?.find((c: any) => {
+                                                                        const cId = (c.id || "").toLowerCase();
+                                                                        const cVal = (c.value || "").toLowerCase();
+                                                                        const cNameLower = (c.name || "").toLowerCase();
+                                                                        const targetLower = choiceValue.toLowerCase();
+
+                                                                        return (
+                                                                            cId === targetLower ||
+                                                                            cVal === targetLower ||
+                                                                            cNameLower === targetLower ||
+                                                                            slugify(c.name || "") === targetLower ||
+                                                                            slugify(c.name || "") === slugify(choiceValue)
+                                                                        );
+                                                                    });
+
                                                                     if (choice) {
                                                                         return {
                                                                             groupLabel: group.groupLabel || group.label || groupId,
+                                                                            groupDescription: group.description,
                                                                             choiceLabel: choice.name || choice.label || choiceValue,
+                                                                            choiceDescription: choice.description || choice.shortDescription || "",
                                                                             selectionType: group.selectionType || "single"
                                                                         };
                                                                     }
+
                                                                     return {
                                                                         groupLabel: group.groupLabel || group.label || groupId,
+                                                                        groupDescription: group.description,
                                                                         choiceLabel: choiceValue,
+                                                                        choiceDescription: "",
                                                                         selectionType: group.selectionType || "single"
                                                                     };
                                                                 }
                                                             }
                                                         }
-                                                        return { groupLabel: groupId, choiceLabel: choiceValue, selectionType: "single" };
+                                                        return { groupLabel: groupId, groupDescription: "", choiceLabel: choiceValue, choiceDescription: "", selectionType: "single" };
                                                     };
 
                                                     return Object.entries(choiceGroups).map(([groupId, choices]: [string, any]) => {
@@ -339,7 +412,7 @@ export function DesignForm({ project, packageData, services, features }: any) {
                                                                                     if (checked) {
                                                                                         active = [choiceInc.choiceValue];
                                                                                     } else {
-                                                                                        // If single select, we might allow unselect, or enforce at least one 
+                                                                                        // If single select, we might allow unselect, or enforce at least one
                                                                                         // For now, let's allow unselect unless it's required
                                                                                         active = active.filter(v => v !== choiceInc.choiceValue);
                                                                                     }
@@ -365,17 +438,17 @@ export function DesignForm({ project, packageData, services, features }: any) {
                                                                         return (
                                                                             <div key={choiceInc.choiceValue} className="flex items-center gap-3">
                                                                                 <Checkbox
-                                                                                    id={`choice-${choiceInc.choiceValue}`}
+                                                                                    id={`choice - ${choiceInc.choiceValue} `}
                                                                                     checked={isSelected}
                                                                                     onCheckedChange={toggleChoice}
                                                                                     disabled={isRequired}
                                                                                 />
-                                                                                {sState.aiRecommended?.[`${groupId}-${choiceInc.choiceValue}`] && (
+                                                                                {sState.aiRecommended?.[`${groupId} -${choiceInc.choiceValue} `] && (
                                                                                     <div className="text-primary animate-pulse" title="Recommended from requirements">
                                                                                         <Sparkles size={14} />
                                                                                     </div>
                                                                                 )}
-                                                                                <Label htmlFor={`choice-${choiceInc.choiceValue}`} className="cursor-pointer">
+                                                                                <Label htmlFor={`choice - ${choiceInc.choiceValue} `} className="cursor-pointer">
                                                                                     {choiceLabel}
                                                                                 </Label>
                                                                                 <div className="ml-auto scale-90 opacity-80">
@@ -432,10 +505,11 @@ export function DesignForm({ project, packageData, services, features }: any) {
                                     });
                                     if (!res.ok) throw new Error("Generation failed");
                                     const data = await res.json();
+                                    console.log("[Generate w/ AI response]", data);
                                     setFormState((prev: any) => ({
                                         ...prev,
-                                        execSummary: data.execSummary,
-                                        conclusion: data.conclusion
+                                        execSummary: data.execSummary || data.exec_summary || data.executive_summary || prev.execSummary,
+                                        conclusion: data.conclusion || data.Conclusion || prev.conclusion
                                     }));
                                     toast.success("Design output generated!");
                                 } catch (error) {
@@ -444,7 +518,7 @@ export function DesignForm({ project, packageData, services, features }: any) {
                                     setIsGeneratingProxy(false);
                                 }
                             }} disabled={isGeneratingProxy}>
-                                <Wand2 className="mr-2 h-4 w-4" />
+                                <Sparkles className="mr-2 h-4 w-4" />
                                 {isGeneratingProxy ? "Generating..." : "Regenerate w/ AI"}
                             </Button>
                         </div>
@@ -471,26 +545,138 @@ export function DesignForm({ project, packageData, services, features }: any) {
                             if (!inc || !serviceDef) return null;
 
                             return (
-                                <div key={sState.serviceId} className="space-y-2 border-b pb-4 last:border-0">
-                                    <h4 className="font-bold text-lg">{inc.serviceName}</h4>
-                                    <p className="text-sm text-muted-foreground mb-2">{serviceDef.shortDescription}</p>
+                                <div key={sState.serviceId} className="space-y-4 border-b pb-6 last:border-0 last:pb-0">
+                                    <div className="space-y-1">
+                                        <h4 className="font-bold text-lg text-zinc-900">{inc.serviceName}</h4>
+                                        <p className="text-sm text-muted-foreground leading-relaxed">{serviceDef.description}</p>
+                                    </div>
 
                                     {sState.selectedOptions.length > 0 && (
-                                        <div className="pl-4 space-y-1">
-                                            <p className="text-xs font-semibold uppercase text-muted-foreground">Chosen Options:</p>
+                                        <div className="pl-4 space-y-3">
+                                            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">Chosen Options</p>
                                             {sState.selectedOptions.map((oid: string) => {
-                                                const oDef = serviceDef.serviceOptions.find((so: any) => so.optionId === oid);
-                                                return <div key={oid} className="text-sm flex items-center gap-2"><Check size={14} className="text-green-600" /> {oDef?.name}</div>;
+                                                const oDef = serviceDef.serviceOptions.find((so: any) => (so.optionId || so.id) === oid);
+                                                return (
+                                                    <div key={oid} className="space-y-1">
+                                                        <div className="text-sm font-semibold flex items-center gap-2 text-zinc-800">
+                                                            <Check size={14} className="text-green-600 shrink-0" />
+                                                            {oDef?.name}
+                                                        </div>
+                                                        {oDef?.description && (
+                                                            <p className="text-sm text-muted-foreground pl-5 leading-relaxed">{oDef.description}</p>
+                                                        )}
+                                                    </div>
+                                                );
                                             })}
                                         </div>
                                     )}
 
                                     {Object.entries(sState.selectedDesignChoices).some(([_, v]: any) => v.length > 0) && (
-                                        <div className="pl-4 space-y-1 mt-2">
-                                            <p className="text-xs font-semibold uppercase text-muted-foreground">Design Choices:</p>
-                                            {Object.entries(sState.selectedDesignChoices).map(([gid, vals]: [string, any]) => (
-                                                vals.map((v: string) => <div key={`${gid}-${v}`} className="text-sm flex items-center gap-2"><Check size={14} className="text-blue-600" /> {gid}: {v}</div>)
-                                            ))}
+                                        <div className="pl-4 space-y-4 mt-6">
+                                            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">Architecture & Design Selections</p>
+                                            <div className="space-y-6">
+                                                {(() => {
+                                                    const getLabel = (gid: string, val: string) => {
+                                                        const slugify = (s: string) => (s || "").toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+                                                        const gidLower = gid.toLowerCase();
+                                                        let fallbackGroup: any = null;
+
+                                                        for (const opt of (serviceDef.serviceOptions || []) as any[]) {
+                                                            for (const group of (opt.designOptions || []) as any[]) {
+                                                                const currentGidLower = (group.groupId || "").toLowerCase();
+                                                                const groupLabelLower = (group.groupLabel || "").toLowerCase();
+
+                                                                if (currentGidLower === gidLower || groupLabelLower === gidLower) {
+                                                                    const choice = group.choices?.find((c: any) => {
+                                                                        const cId = (c.id || "").toLowerCase();
+                                                                        const cVal = (c.value || "").toLowerCase();
+                                                                        const cNameLower = (c.name || "").toLowerCase();
+                                                                        const targetLower = val.toLowerCase();
+                                                                        return (
+                                                                            cId === targetLower ||
+                                                                            cVal === targetLower ||
+                                                                            cNameLower === targetLower ||
+                                                                            slugify(c.name || "") === targetLower ||
+                                                                            slugify(c.name || "") === slugify(val)
+                                                                        );
+                                                                    });
+                                                                    if (choice) {
+                                                                        return {
+                                                                            gLabel: group.groupLabel || gid,
+                                                                            gDesc: group.description,
+                                                                            cLabel: choice.name || val,
+                                                                            cDesc: choice.description || choice.shortDescription || (choice as any).longDescription || ""
+                                                                        };
+                                                                    }
+                                                                    if (!fallbackGroup) fallbackGroup = group;
+                                                                }
+                                                            }
+                                                        }
+                                                        if (fallbackGroup) {
+                                                            return { gLabel: fallbackGroup.groupLabel || gid, gDesc: fallbackGroup.description, cLabel: val, cDesc: "" };
+                                                        }
+                                                        return { gLabel: gid, gDesc: "", cLabel: val, cDesc: "" };
+                                                    };
+
+                                                    return (
+                                                        <div className="space-y-8">
+                                                            {Object.entries(sState.selectedDesignChoices).map(([gid, vals]: [string, any]) => {
+                                                                if (!vals || vals.length === 0) return null;
+                                                                const firstLabel = getLabel(gid, vals[0]);
+
+                                                                return (
+                                                                    <div key={gid} className="space-y-4">
+                                                                        <div className="pb-2 border-b border-zinc-100">
+                                                                            <h5 className="font-bold text-sm text-zinc-900 flex items-center gap-2">
+                                                                                <div className="w-1.5 h-1.5 rounded-full bg-primary/40" />
+                                                                                {firstLabel.gLabel}
+                                                                            </h5>
+                                                                            {firstLabel.gDesc && (
+                                                                                <p className="text-xs text-muted-foreground mt-1 italic">{firstLabel.gDesc}</p>
+                                                                            )}
+                                                                        </div>
+                                                                        <div className="space-y-4 pl-4">
+                                                                            {vals.map((v: string) => {
+                                                                                const { cLabel, cDesc } = getLabel(gid, v);
+                                                                                const isAiRecommended = sState.aiRecommended?.[`${gid}-${v}`] || sState.aiRecommended?.[v];
+                                                                                return (
+                                                                                    <div key={`${gid}-${v}`} className="flex gap-4 group/item relative">
+                                                                                        <div className="shrink-0 w-8 h-8 rounded-full bg-primary/5 flex items-center justify-center border border-primary/10 transition-colors group-hover/item:bg-primary/10">
+                                                                                            {isAiRecommended ? <Sparkles size={14} className="text-primary animate-pulse" /> : <ChevronRight size={14} className="text-muted-foreground" />}
+                                                                                        </div>
+                                                                                        <div className="space-y-1 w-full">
+                                                                                            <div className="flex items-center gap-2">
+                                                                                                <p className="font-bold text-sm text-zinc-900">{cLabel}</p>
+                                                                                                {isAiRecommended && (
+                                                                                                    <Badge variant="outline" className="text-[9px] h-4 px-1.5 py-0 bg-primary/5 text-primary border-primary/20 uppercase tracking-tighter">AI Suggestion</Badge>
+                                                                                                )}
+                                                                                            </div>
+                                                                                            {cDesc && <p className="text-sm text-zinc-600 leading-relaxed font-medium">{cDesc}</p>}
+                                                                                        </div>
+                                                                                    </div>
+                                                                                );
+                                                                            })}
+                                                                        </div>
+                                                                    </div>
+                                                                );
+                                                            })}
+
+                                                            {/* Reasoning in Review */}
+                                                            {sState.reasoning && (
+                                                                <div className="mt-8 p-6 bg-zinc-50 rounded-xl border border-zinc-200 border-dashed">
+                                                                    <div className="flex items-center gap-2 mb-3">
+                                                                        <Sparkles size={14} className="text-primary opacity-60" />
+                                                                        <h5 className="text-[10px] uppercase tracking-[0.2em] font-bold text-zinc-500">AI Selection Reasoning</h5>
+                                                                    </div>
+                                                                    <p className="text-sm text-zinc-600 leading-relaxed italic">
+                                                                        "{sState.reasoning}"
+                                                                    </p>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })()}
+                                            </div>
                                         </div>
                                     )}
                                 </div>
@@ -528,16 +714,49 @@ export function DesignForm({ project, packageData, services, features }: any) {
                                 const serviceDef = services.find((s: any) => s.id === sState.serviceId);
                                 if (serviceDef) {
                                     serviceDef.assumptions?.forEach((a: string) => activeAssumptions.add(a));
+                                    // Handle both naming conventions
+                                    serviceDef.constraints?.forEach((c: string) => activeCaveats.add(c));
                                     serviceDef.caveats?.forEach((c: string) => activeCaveats.add(c));
+
+                                    // 1. Add from selected Service Options
+                                    sState.selectedOptions?.forEach((oid: string) => {
+                                        const oDef = serviceDef.serviceOptions?.find((so: any) => (so.optionId || so.id) === oid);
+                                        if (oDef) {
+                                            oDef.assumptions?.forEach((a: string) => activeAssumptions.add(a));
+                                            oDef.constraints?.forEach((c: string) => activeCaveats.add(c));
+                                            oDef.caveats?.forEach((c: string) => activeCaveats.add(c));
+                                        }
+                                    });
+
+                                    // 2. Add from selected Design Choices
+                                    Object.entries(sState.selectedDesignChoices || {}).forEach(([groupId, choiceValues]) => {
+                                        const vals = choiceValues as string[];
+                                        vals.forEach(val => {
+                                            // Find the choice definition
+                                            serviceDef.serviceOptions?.forEach((so: any) => {
+                                                so.designOptions?.forEach((group: any) => {
+                                                    if (group.groupId === groupId) {
+                                                        const choiceDef = group.choices?.find((c: any) => (c.value || c.id) === val);
+                                                        if (choiceDef) {
+                                                            choiceDef.assumptions?.forEach((a: string) => activeAssumptions.add(a));
+                                                            choiceDef.constraints?.forEach((c: string) => activeCaveats.add(c));
+                                                            choiceDef.caveats?.forEach((c: string) => activeCaveats.add(c));
+                                                        }
+                                                    }
+                                                });
+                                            });
+                                        });
+                                    });
                                 }
 
-                                // features are active if their service is in package inclusion and the feature is included
+                                // 3. Add from included features
                                 const inc = inclusions.find((i: any) => i.serviceId === sState.serviceId);
                                 if (inc && inc.includedFeatures) {
                                     inc.includedFeatures.forEach((featInc: any) => {
                                         const fDef = features.find((f: any) => f.name === featInc.featureSlug);
                                         if (fDef) {
                                             fDef.assumptions?.forEach((a: string) => activeAssumptions.add(a));
+                                            fDef.constraints?.forEach((c: string) => activeCaveats.add(c));
                                             fDef.caveats?.forEach((c: string) => activeCaveats.add(c));
                                         }
                                     });
@@ -547,18 +766,18 @@ export function DesignForm({ project, packageData, services, features }: any) {
                             return (
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-4">
-                                        <h4 className="font-semibold border-b pb-2">Assumptions</h4>
-                                        <ul className="list-disc pl-5 text-sm space-y-1">
-                                            {activeAssumptions.size > 0
-                                                ? Array.from(activeAssumptions).map((a, i) => <li key={i}>{a}</li>)
-                                                : <li className="text-muted-foreground italic">None</li>}
-                                        </ul>
-                                    </div>
-                                    <div className="space-y-4">
                                         <h4 className="font-semibold border-b pb-2">Caveats</h4>
                                         <ul className="list-disc pl-5 text-sm space-y-1">
                                             {activeCaveats.size > 0
                                                 ? Array.from(activeCaveats).map((c, i) => <li key={i}>{c}</li>)
+                                                : <li className="text-muted-foreground italic">None</li>}
+                                        </ul>
+                                    </div>
+                                    <div className="space-y-4">
+                                        <h4 className="font-semibold border-b pb-2">Assumptions</h4>
+                                        <ul className="list-disc pl-5 text-sm space-y-1">
+                                            {activeAssumptions.size > 0
+                                                ? Array.from(activeAssumptions).map((a, i) => <li key={i}>{a}</li>)
                                                 : <li className="text-muted-foreground italic">None</li>}
                                         </ul>
                                     </div>

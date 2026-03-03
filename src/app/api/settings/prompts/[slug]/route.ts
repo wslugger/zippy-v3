@@ -10,7 +10,17 @@ export async function GET(
     try {
         const { slug } = await params;
         const prompt = await prisma.aIPrompt.findUnique({ where: { slug } });
-        if (!prompt) return NextResponse.json({ error: "Not found" }, { status: 404 });
+        if (!prompt) {
+            // Return a default prompt scaffold instead of 404
+            return NextResponse.json({
+                slug,
+                displayName: slug.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase()),
+                model: "gemini-3-flash-preview",
+                temperature: 0.1,
+                systemInstruction: "",
+                userPromptTemplate: ""
+            });
+        }
         return NextResponse.json(prompt);
     } catch (err) {
         console.error("GET /api/settings/prompts/[slug] error:", err);
@@ -33,7 +43,18 @@ export async function PUT(
                 { status: 400 }
             );
         }
-        const prompt = await prisma.aIPrompt.update({ where: { slug }, data: parsed.data });
+        const prompt = await prisma.aIPrompt.upsert({
+            where: { slug },
+            update: parsed.data,
+            create: {
+                slug,
+                displayName: slug.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase()),
+                model: parsed.data.model ?? "gemini-3-flash-preview",
+                temperature: parsed.data.temperature ?? 0.1,
+                systemInstruction: parsed.data.systemInstruction ?? "",
+                userPromptTemplate: parsed.data.userPromptTemplate ?? ""
+            }
+        });
         return NextResponse.json(prompt);
     } catch (err) {
         console.error("PUT /api/settings/prompts/[slug] error:", err);

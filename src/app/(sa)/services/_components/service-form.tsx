@@ -549,7 +549,13 @@ function ServiceOptionItem({ index, control, watch, remove }: any) {
                                 <Button
                                     type="button"
                                     variant="outline"
-                                    onClick={() => appendGroup({ groupId: `group-${Date.now()}`, groupLabel: "New Category", choices: [] })}
+                                    onClick={() => appendGroup({
+                                        groupId: `group-${Date.now()}`,
+                                        groupLabel: "New Category",
+                                        shortDescription: "",
+                                        description: "",
+                                        choices: []
+                                    })}
                                     className="text-blue-600 border-blue-200 hover:bg-blue-50 h-8 text-xs"
                                 >
                                     <Plus className="w-3 h-3 mr-1" />
@@ -584,6 +590,38 @@ function ServiceOptionItem({ index, control, watch, remove }: any) {
                                                 >
                                                     <Trash2 className="h-4 w-4" />
                                                 </Button>
+                                            </div>
+
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                                <FormField
+                                                    control={control}
+                                                    name={`serviceOptions.${index}.designOptions.${groupIndex}.shortDescription`}
+                                                    render={({ field }) => (
+                                                        <FormItem>
+                                                            <FormLabel className="text-xs text-zinc-600">Category Short Description</FormLabel>
+                                                            <FormControl>
+                                                                <Input {...field} value={field.value ?? ""} className="h-8 py-0 text-sm bg-white" placeholder="Brief description of this category" />
+                                                            </FormControl>
+                                                        </FormItem>
+                                                    )}
+                                                />
+                                                <FormField
+                                                    control={control}
+                                                    name={`serviceOptions.${index}.designOptions.${groupIndex}.description`}
+                                                    render={({ field }) => (
+                                                        <FormItem>
+                                                            <FormLabel className="text-xs text-zinc-600">Category Detailed Description</FormLabel>
+                                                            <FormControl>
+                                                                <Textarea
+                                                                    {...field}
+                                                                    value={field.value ?? ""}
+                                                                    placeholder="Comprehensive description of this category..."
+                                                                    className="min-h-[60px] text-sm bg-white"
+                                                                />
+                                                            </FormControl>
+                                                        </FormItem>
+                                                    )}
+                                                />
                                             </div>
 
                                             <DesignOptionChoices
