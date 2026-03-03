@@ -425,7 +425,10 @@ export function EquipmentForm({
                             )}
 
                             {selectedRoles.includes("WAN") && (
-                                <div className="space-y-6">
+                                <div className="space-y-6 mt-2 mb-8">
+                                    <div className="border-b border-zinc-200 pb-2">
+                                        <h4 className="text-base font-medium text-zinc-900">WAN Specifications</h4>
+                                    </div>
                                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                         <FormField
                                             control={form.control}
@@ -550,111 +553,121 @@ export function EquipmentForm({
                             )}
 
                             {selectedRoles.includes("LAN") && (
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    <FormField
-                                        control={form.control}
-                                        name="specs.accessPortCount"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Access Port Count</FormLabel>
-                                                <FormControl>
-                                                    {/* @ts-ignore */}
-                                                    <Input type="number" {...field} value={field.value || ""} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} />
-                                                </FormControl>
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={form.control}
-                                        name="specs.accessPortType"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Access Port Type</FormLabel>
-                                                <Select onValueChange={field.onChange} value={field.value as string}>
+                                <div className="space-y-6 mt-2 mb-8">
+                                    <div className="border-b border-zinc-200 pb-2">
+                                        <h4 className="text-base font-medium text-zinc-900">LAN Specifications</h4>
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                        <FormField
+                                            control={form.control}
+                                            name="specs.accessPortCount"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Access Port Count</FormLabel>
                                                     <FormControl>
-                                                        <SelectTrigger><SelectValue placeholder="Physical Media" /></SelectTrigger>
+                                                        {/* @ts-ignore */}
+                                                        <Input type="number" {...field} value={field.value || ""} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} />
                                                     </FormControl>
-                                                    <SelectContent>
-                                                        {portTypes.map((pt: string) => <SelectItem key={pt} value={pt}>{pt}</SelectItem>)}
-                                                    </SelectContent>
-                                                </Select>
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={form.control}
-                                        name="specs.poeBudgetWatts"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>PoE Budget (Watts)</FormLabel>
-                                                <FormControl>
-                                                    {/* @ts-ignore */}
-                                                    <Input type="number" {...field} value={field.value || ""} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} />
-                                                </FormControl>
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={form.control}
-                                        name="specs.isStackable"
-                                        render={({ field }) => (
-                                            <FormItem className="flex flex-row items-center justify-between rounded-lg border px-4 py-2 mt-auto h-[42px]">
-                                                <FormLabel className="font-normal">Stackable Chassis?</FormLabel>
-                                                <FormControl>
-                                                    {/* @ts-ignore */}
-                                                    <Switch checked={field.value} onCheckedChange={field.onChange} />
-                                                </FormControl>
-                                            </FormItem>
-                                        )}
-                                    />
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name="specs.accessPortType"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Access Port Type</FormLabel>
+                                                    <Select onValueChange={field.onChange} value={field.value as string}>
+                                                        <FormControl>
+                                                            <SelectTrigger><SelectValue placeholder="Physical Media" /></SelectTrigger>
+                                                        </FormControl>
+                                                        <SelectContent>
+                                                            {portTypes.map((pt: string) => <SelectItem key={pt} value={pt}>{pt}</SelectItem>)}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name="specs.poeBudgetWatts"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>PoE Budget (Watts)</FormLabel>
+                                                    <FormControl>
+                                                        {/* @ts-ignore */}
+                                                        <Input type="number" {...field} value={field.value || ""} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} />
+                                                    </FormControl>
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name="specs.isStackable"
+                                            render={({ field }) => (
+                                                <FormItem className="flex flex-row items-center justify-between rounded-lg border px-4 py-2 mt-auto h-[42px]">
+                                                    <FormLabel className="font-normal">Stackable Chassis?</FormLabel>
+                                                    <FormControl>
+                                                        {/* @ts-ignore */}
+                                                        <Switch checked={field.value} onCheckedChange={field.onChange} />
+                                                    </FormControl>
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </div>
                                 </div>
                             )}
 
                             {selectedRoles.includes("WLAN") && (
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    <FormField
-                                        control={form.control}
-                                        name="specs.wifiStandard"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Wi-Fi Standard</FormLabel>
-                                                <FormControl>
-                                                    {/* @ts-ignore */}
-                                                    <Input placeholder="e.g., Wi-Fi 6" {...field} value={field.value || ""} />
-                                                </FormControl>
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={form.control}
-                                        name="specs.powerDrawWatts"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Power Draw (Watts, from PoE)</FormLabel>
-                                                <FormControl>
-                                                    {/* @ts-ignore */}
-                                                    <Input type="number" {...field} value={field.value || ""} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} />
-                                                </FormControl>
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={form.control}
-                                        name="specs.environment"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Target Environment</FormLabel>
-                                                <Select onValueChange={field.onChange} value={field.value as string}>
+                                <div className="space-y-6 mt-2 mb-8">
+                                    <div className="border-b border-zinc-200 pb-2">
+                                        <h4 className="text-base font-medium text-zinc-900">WLAN Specifications</h4>
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                        <FormField
+                                            control={form.control}
+                                            name="specs.wifiStandard"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Wi-Fi Standard</FormLabel>
                                                     <FormControl>
-                                                        <SelectTrigger><SelectValue placeholder="Where is it deployed?" /></SelectTrigger>
+                                                        {/* @ts-ignore */}
+                                                        <Input placeholder="e.g., Wi-Fi 6" {...field} value={field.value || ""} />
                                                     </FormControl>
-                                                    <SelectContent>
-                                                        {environments.map((env: string) => <SelectItem key={env} value={env}>{env}</SelectItem>)}
-                                                    </SelectContent>
-                                                </Select>
-                                            </FormItem>
-                                        )}
-                                    />
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name="specs.powerDrawWatts"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Power Draw (Watts, from PoE)</FormLabel>
+                                                    <FormControl>
+                                                        {/* @ts-ignore */}
+                                                        <Input type="number" {...field} value={field.value || ""} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} />
+                                                    </FormControl>
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name="specs.environment"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Target Environment</FormLabel>
+                                                    <Select onValueChange={field.onChange} value={field.value as string}>
+                                                        <FormControl>
+                                                            <SelectTrigger><SelectValue placeholder="Where is it deployed?" /></SelectTrigger>
+                                                        </FormControl>
+                                                        <SelectContent>
+                                                            {environments.map((env: string) => <SelectItem key={env} value={env}>{env}</SelectItem>)}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </div>
                                 </div>
                             )}
                         </AccordionContent>
