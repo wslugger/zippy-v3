@@ -3,6 +3,8 @@ import { EquipmentForm } from "../_components/equipment-form";
 import { PageHeader } from "@/components/layout/page-header";
 import { notFound } from "next/navigation";
 
+export const dynamic = "force-dynamic";
+
 export default async function EditEquipmentPage({
     params,
 }: {

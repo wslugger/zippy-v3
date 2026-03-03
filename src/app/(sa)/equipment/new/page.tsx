@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma";
 import { EquipmentForm } from "../_components/equipment-form";
 import { PageHeader } from "@/components/layout/page-header";
 
+export const dynamic = "force-dynamic";
+
 export default async function NewEquipmentPage() {
     const [taxonomy, services] = await Promise.all([
         prisma.globalTaxonomy.findFirst({
