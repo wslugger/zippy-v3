@@ -206,20 +206,39 @@ export function DesignForm({ project, packageData, services, features }: any) {
                                     {/* Service Options */}
                                     {inc.includedOptions?.length > 0 && (
                                         <div className="space-y-3">
-                                            <h4 className="font-medium text-muted-foreground border-b pb-1">Service Options</h4>
+                                            <div className="flex items-center justify-between border-b pb-1">
+                                                <h4 className="font-medium text-muted-foreground">Service Options</h4>
+                                                <Badge variant="outline" className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                                                    {(inc.optionsSelectionType || "multi") === "single" ? "Single Select" : "Multi Select"}
+                                                </Badge>
+                                            </div>
                                             <div className="space-y-3">
                                                 {inc.includedOptions.map((optInc: any) => {
                                                     const optionDef = serviceDef.serviceOptions?.find((o: any) => o.optionId === optInc.optionId);
                                                     const isRequired = optInc.designation === "required";
                                                     const isSelected = isRequired || sState.selectedOptions.includes(optInc.optionId);
+                                                    const selectionType = inc.optionsSelectionType || "multi";
 
                                                     const toggleOption = (checked: boolean) => {
                                                         if (isRequired) return; // cannot toggle required
                                                         setServiceState(inc.serviceId, (prev: any) => {
-                                                            const opts = new Set(prev.selectedOptions);
-                                                            if (checked) opts.add(optInc.optionId);
-                                                            else opts.delete(optInc.optionId);
-                                                            return { ...prev, selectedOptions: Array.from(opts) };
+                                                            let nextOptions = Array.isArray(prev.selectedOptions) ? [...prev.selectedOptions] : [];
+                                                            if (selectionType === "single") {
+                                                                if (checked) {
+                                                                    nextOptions = [optInc.optionId];
+                                                                } else {
+                                                                    nextOptions = nextOptions.filter(id => id !== optInc.optionId);
+                                                                }
+                                                            } else {
+                                                                if (checked) {
+                                                                    if (!nextOptions.includes(optInc.optionId)) {
+                                                                        nextOptions.push(optInc.optionId);
+                                                                    }
+                                                                } else {
+                                                                    nextOptions = nextOptions.filter(id => id !== optInc.optionId);
+                                                                }
+                                                            }
+                                                            return { ...prev, selectedOptions: nextOptions };
                                                         });
                                                     };
 
@@ -265,27 +284,44 @@ export function DesignForm({ project, packageData, services, features }: any) {
                                                     }, {});
 
                                                     const getDesignLabels = (groupId: string, choiceValue: string) => {
-                                                        for (const opt of serviceDef.serviceOptions || []) {
-                                                            for (const group of opt.designOptions || []) {
+                                                        for (const opt of (serviceDef.serviceOptions || []) as any[]) {
+                                                            for (const group of (opt.designOptions || []) as any[]) {
                                                                 if (group.groupId === groupId) {
                                                                     const choice = group.choices?.find((c: any) => c.id === choiceValue || c.value === choiceValue);
                                                                     if (choice) {
-                                                                        return { groupLabel: group.groupLabel || group.label || groupId, choiceLabel: choice.name || choice.label || choiceValue };
+                                                                        return {
+                                                                            groupLabel: group.groupLabel || group.label || groupId,
+                                                                            choiceLabel: choice.name || choice.label || choiceValue,
+                                                                            selectionType: group.selectionType || "single"
+                                                                        };
                                                                     }
-                                                                    return { groupLabel: group.groupLabel || group.label || groupId, choiceLabel: choiceValue };
+                                                                    return {
+                                                                        groupLabel: group.groupLabel || group.label || groupId,
+                                                                        choiceLabel: choiceValue,
+                                                                        selectionType: group.selectionType || "single"
+                                                                    };
                                                                 }
                                                             }
                                                         }
-                                                        return { groupLabel: groupId, choiceLabel: choiceValue };
+                                                        return { groupLabel: groupId, choiceLabel: choiceValue, selectionType: "single" };
                                                     };
 
                                                     return Object.entries(choiceGroups).map(([groupId, choices]: [string, any]) => {
-                                                        // Get group label from the first choice
-                                                        const { groupLabel } = getDesignLabels(groupId, choices[0]?.choiceValue);
+                                                        // Get group label and default selection type from the first choice lookup
+                                                        const { groupLabel, selectionType: defaultST } = getDesignLabels(groupId, choices[0]?.choiceValue);
+
+                                                        // Fallback chain: Package Setting -> Service Definition -> "single"
+                                                        const selectionType = inc.designChoiceGroupSettings?.find((s: any) => s.groupId === groupId)?.selectionType
+                                                            || defaultST;
 
                                                         return (
                                                             <div key={groupId} className="p-3 border rounded bg-background/50 space-y-3">
-                                                                <h5 className="font-medium">{groupLabel}</h5>
+                                                                <div className="flex items-center justify-between">
+                                                                    <h5 className="font-medium">{groupLabel}</h5>
+                                                                    <Badge variant="outline" className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                                                                        {selectionType === "single" ? "Single Select" : "Multi Select"}
+                                                                    </Badge>
+                                                                </div>
                                                                 <div className="space-y-2 pl-2">
                                                                     {choices.map((choiceInc: any) => {
                                                                         const isRequired = choiceInc.designation === "required";
@@ -297,14 +333,35 @@ export function DesignForm({ project, packageData, services, features }: any) {
                                                                             if (isRequired) return;
                                                                             setServiceState(inc.serviceId, (prev: any) => {
                                                                                 const grps = { ...prev.selectedDesignChoices };
-                                                                                const active = new Set(grps[groupId] || []);
-                                                                                if (checked) active.add(choiceInc.choiceValue);
-                                                                                else active.delete(choiceInc.choiceValue);
-                                                                                grps[groupId] = Array.from(active);
-                                                                                return { ...prev, selectedDesignChoices: grps };
+                                                                                let active = Array.isArray(grps[groupId]) ? [...grps[groupId]] : [];
+
+                                                                                if (selectionType === "single") {
+                                                                                    if (checked) {
+                                                                                        active = [choiceInc.choiceValue];
+                                                                                    } else {
+                                                                                        // If single select, we might allow unselect, or enforce at least one 
+                                                                                        // For now, let's allow unselect unless it's required
+                                                                                        active = active.filter(v => v !== choiceInc.choiceValue);
+                                                                                    }
+                                                                                } else {
+                                                                                    if (checked) {
+                                                                                        if (!active.includes(choiceInc.choiceValue)) {
+                                                                                            active.push(choiceInc.choiceValue);
+                                                                                        }
+                                                                                    } else {
+                                                                                        active = active.filter(v => v !== choiceInc.choiceValue);
+                                                                                    }
+                                                                                }
+
+                                                                                return {
+                                                                                    ...prev,
+                                                                                    selectedDesignChoices: {
+                                                                                        ...grps,
+                                                                                        [groupId]: active
+                                                                                    }
+                                                                                };
                                                                             });
                                                                         };
-
                                                                         return (
                                                                             <div key={choiceInc.choiceValue} className="flex items-center gap-3">
                                                                                 <Checkbox

@@ -112,6 +112,37 @@ function DesignationToggle({
     );
 }
 
+function SelectionTypeToggle({
+    value,
+    onChange,
+    className = ""
+}: {
+    value: "single" | "multi";
+    onChange: (v: "single" | "multi") => void;
+    className?: string;
+}) {
+    return (
+        <div className={`flex gap-0.5 shrink-0 bg-zinc-100/50 p-0.5 rounded-md border border-zinc-200/50 hover:border-zinc-300 transition-colors shadow-inner w-fit ${className}`}>
+            {(["single", "multi"] as const).map((v) => (
+                <button
+                    key={v}
+                    type="button"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onChange(v);
+                    }}
+                    className={`px-1.5 py-0.5 rounded-[3px] text-[9px] font-bold border transition-all tracking-tight uppercase ${value === v
+                        ? "bg-white text-primary border-zinc-200 shadow-xs"
+                        : "border-transparent text-zinc-400 hover:text-zinc-600 hover:bg-zinc-200/50"
+                        }`}
+                >
+                    {v}
+                </button>
+            ))}
+        </div>
+    );
+}
+
 const emptyCollateral = (collateralTypes: string[]): Collateral => ({ title: "", url: "", type: collateralTypes[0] || "PDF" });
 
 function normalizeInclusions(inclusions: any[] = [], catalog: ServiceRow[] = []): PackageServiceInclusion[] {
@@ -132,6 +163,8 @@ function normalizeInclusions(inclusions: any[] = [], catalog: ServiceRow[] = [])
                 }))
                 : (s.includedFeatures || []),
             includedDesignChoices: s.includedDesignChoices || [],
+            designChoiceGroupSettings: s.designChoiceGroupSettings || [],
+            optionsSelectionType: s.optionsSelectionType || "multi",
         };
 
         // Migration for includedDesignOptions (record) to includedDesignChoices (array)
@@ -241,6 +274,8 @@ function ServiceInclusionRow({
     onToggleOption,
     onToggleFeature,
     onToggleDesignChoice,
+    onUpdateGroupSelectionType,
+    onUpdateOptionsSelectionType,
     onChangeDesignation,
 }: {
     inclusion: PackageServiceInclusion;
@@ -252,7 +287,15 @@ function ServiceInclusionRow({
     onToggleDesignChoice: (
         serviceId: string,
         groupId: string,
-        value: string,
+        value: string
+    ) => void;
+    onUpdateGroupSelectionType: (
+        serviceId: string,
+        groupId: string,
+        selectionType: "single" | "multi"
+    ) => void;
+    onUpdateOptionsSelectionType: (
+        serviceId: string,
         selectionType: "single" | "multi"
     ) => void;
     onChangeDesignation: (
@@ -317,15 +360,21 @@ function ServiceInclusionRow({
                 <div className="px-4 py-3 border-t space-y-4 bg-background">
                     {options.length > 0 && (
                         <div>
-                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-                                Section / Service Options
-                            </p>
-                            <div className="space-y-1">
+                            <div className="flex items-center gap-4 mb-4 pb-2 border-b border-zinc-200">
+                                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                                    Section / Service Options
+                                </p>
+                                <SelectionTypeToggle
+                                    value={inclusion.optionsSelectionType || "multi"}
+                                    onChange={(v: "single" | "multi") => onUpdateOptionsSelectionType(inclusion.serviceId, v)}
+                                />
+                            </div>
+                            <div className="space-y-3">
                                 {options.map((opt) => {
                                     const checked = !!inclusion.includedOptions?.find(o => o.optionId === opt.optionId);
                                     return (
-                                        <div key={opt.optionId} className="space-y-1">
-                                            <div className="flex items-center justify-between group h-7">
+                                        <div key={opt.optionId} className={`space-y-3 p-3 rounded-lg transition-colors ${checked ? 'bg-zinc-50 border border-zinc-200 shadow-sm' : 'hover:bg-zinc-50/50'}`}>
+                                            <div className="flex items-center gap-4 group min-h-7">
                                                 <label className="flex items-center gap-2 cursor-pointer grow">
                                                     <input
                                                         type="checkbox"
@@ -333,7 +382,7 @@ function ServiceInclusionRow({
                                                         onChange={() => onToggleOption(inclusion.serviceId, opt.optionId)}
                                                         className="h-4 w-4 rounded border-input accent-primary"
                                                     />
-                                                    <span className="text-sm group-hover:text-foreground text-muted-foreground">
+                                                    <span className={`text-sm ${checked ? 'font-medium text-foreground' : 'text-muted-foreground group-hover:text-foreground'}`}>
                                                         {opt.name}
                                                     </span>
                                                 </label>
@@ -348,13 +397,19 @@ function ServiceInclusionRow({
 
                                             {/* Design Options for this Service Option */}
                                             {checked && (opt as any).designOptions?.length > 0 && (
-                                                <div className="ml-6 mt-2 mb-4 space-y-4 border-l-2 border-muted pl-4">
+                                                <div className="ml-6 space-y-4">
                                                     {(opt as any).designOptions.map((group: any) => (
-                                                        <div key={group.groupId} className="space-y-2">
-                                                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                                                                {group.groupLabel}
-                                                            </p>
-                                                            <div className="flex flex-wrap gap-2">
+                                                        <div key={group.groupId} className="space-y-3 bg-white p-3 rounded-md border shadow-sm">
+                                                            <div className="flex items-center gap-3 pb-2 border-b border-zinc-100">
+                                                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                                                                    {group.groupLabel}
+                                                                </p>
+                                                                <SelectionTypeToggle
+                                                                    value={inclusion.designChoiceGroupSettings?.find((s: any) => s.groupId === group.groupId)?.selectionType || group.selectionType || "single"}
+                                                                    onChange={(st: "single" | "multi") => onUpdateGroupSelectionType(inclusion.serviceId, group.groupId, st)}
+                                                                />
+                                                            </div>
+                                                            <div className="flex flex-wrap gap-2 pt-1">
                                                                 {group.choices.map((choice: any) => {
                                                                     const val = choice.value || choice.id;
                                                                     const choiceInclusion = inclusion.includedDesignChoices?.find(
@@ -363,20 +418,19 @@ function ServiceInclusionRow({
                                                                     const isSelected = !!choiceInclusion;
 
                                                                     return (
-                                                                        <div key={val} className="flex flex-col gap-1">
+                                                                        <div key={val} className="flex flex-col gap-1.5 items-center">
                                                                             <button
                                                                                 type="button"
                                                                                 onClick={() =>
                                                                                     onToggleDesignChoice(
                                                                                         inclusion.serviceId,
                                                                                         group.groupId,
-                                                                                        val,
-                                                                                        group.selectionType || "single"
+                                                                                        val
                                                                                     )
                                                                                 }
-                                                                                className={`px-2 py-1 rounded text-xs border transition-all ${isSelected
-                                                                                    ? "bg-primary/10 text-primary border-primary font-medium"
-                                                                                    : "border-border text-muted-foreground hover:border-ring"
+                                                                                className={`px-3 py-1.5 rounded-md text-xs font-semibold border transition-all ${isSelected
+                                                                                    ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                                                                                    : "bg-white border-border text-muted-foreground hover:border-ring shadow-xs"
                                                                                     }`}
                                                                             >
                                                                                 {choice.label || choice.name}
@@ -501,6 +555,8 @@ export function PackageForm({ package: pkg, services, collateralTypes }: Package
                 includedOptions: [],
                 includedFeatures: [],
                 includedDesignChoices: [],
+                designChoiceGroupSettings: [],
+                optionsSelectionType: "multi",
             },
         ]);
     };
@@ -521,15 +577,36 @@ export function PackageForm({ package: pkg, services, collateralTypes }: Package
                 if (i.serviceId !== serviceId) return i;
                 const opts = i.includedOptions || [];
                 const has = opts.find((o) => o.optionId === optionId);
+
+                // When turning an option ON, we auto-include its design choices as standard
+                const nextDesignChoices = [...(i.includedDesignChoices || [])];
+                if (!has) {
+                    const svcDef = services.find((s) => s.id === serviceId);
+                    const optDef = (svcDef?.serviceOptions as any[])?.find((o: any) => o.optionId === optionId);
+                    optDef?.designOptions?.forEach((group: any) => {
+                        group.choices?.forEach((choice: any) => {
+                            const choiceVal = choice.id || choice.value;
+                            if (!nextDesignChoices.find((c) => c.groupId === group.groupId && c.choiceValue === choiceVal)) {
+                                nextDesignChoices.push({
+                                    groupId: group.groupId,
+                                    choiceValue: choiceVal,
+                                    designation: "standard" as const,
+                                });
+                            }
+                        });
+                    });
+                }
+
                 return {
                     ...i,
                     includedOptions: has
                         ? opts.filter((o) => o.optionId !== optionId)
                         : [...opts, { optionId, designation: "standard" }],
+                    includedDesignChoices: nextDesignChoices,
                 };
             })
         );
-    }, []);
+    }, [services]);
 
     const toggleFeature = useCallback((serviceId: string, featureSlug: string) => {
         setInclusions((prev) =>
@@ -548,33 +625,67 @@ export function PackageForm({ package: pkg, services, collateralTypes }: Package
     }, []);
 
     const toggleDesignChoice = useCallback(
-        (serviceId: string, groupId: string, value: string, selectionType: "single" | "multi") => {
+        (serviceId: string, groupId: string, value: string) => {
             setInclusions((prev) =>
                 prev.map((i) => {
                     if (i.serviceId !== serviceId) return i;
 
                     const currentChoices = i.includedDesignChoices || [];
-                    let newChoices: typeof currentChoices;
+                    const isAlreadySelected = currentChoices.find(
+                        (c) => c.groupId === groupId && c.choiceValue === value
+                    );
 
-                    const alreadyInGroup = currentChoices.filter((c) => c.groupId === groupId);
-                    const isAlreadySelected = currentChoices.find((c) => c.groupId === groupId && c.choiceValue === value);
-
-                    if (selectionType === "single") {
-                        // Replace whole group with this one choice
-                        newChoices = [
-                            ...currentChoices.filter((c) => c.groupId !== groupId),
-                            { groupId, choiceValue: value, designation: "standard" },
-                        ];
-                    } else {
-                        // Toggle this specific choice
-                        newChoices = isAlreadySelected
-                            ? currentChoices.filter((c) => !(c.groupId === groupId && c.choiceValue === value))
-                            : [...currentChoices, { groupId, choiceValue: value, designation: "standard" }];
-                    }
+                    // Note: In the Packager, we always allow multiple selections even for 'single' type groups
+                    // because the PM is defining the "menu" of available options for the SA.
+                    const newChoices = isAlreadySelected
+                        ? currentChoices.filter((c) => !(c.groupId === groupId && c.choiceValue === value))
+                        : [...currentChoices, { groupId, choiceValue: value, designation: "standard" as const }];
 
                     return {
                         ...i,
                         includedDesignChoices: newChoices,
+                    };
+                })
+            );
+        },
+        []
+    );
+
+    const updateDesignChoiceGroupSelectionType = useCallback(
+        (serviceId: string, groupId: string, selectionType: "single" | "multi") => {
+            setInclusions((prev) =>
+                prev.map((i) => {
+                    if (i.serviceId !== serviceId) return i;
+                    const settings = i.designChoiceGroupSettings || [];
+                    const existing = settings.find((s) => s.groupId === groupId);
+
+                    let nextSettings: typeof settings;
+                    if (existing) {
+                        nextSettings = settings.map((s) =>
+                            s.groupId === groupId ? { ...s, selectionType } : s
+                        );
+                    } else {
+                        nextSettings = [...settings, { groupId, selectionType }];
+                    }
+
+                    return {
+                        ...i,
+                        designChoiceGroupSettings: nextSettings,
+                    };
+                })
+            );
+        },
+        []
+    );
+
+    const updateOptionsSelectionType = useCallback(
+        (serviceId: string, selectionType: "single" | "multi") => {
+            setInclusions((prev) =>
+                prev.map((i) => {
+                    if (i.serviceId !== serviceId) return i;
+                    return {
+                        ...i,
+                        optionsSelectionType: selectionType,
                     };
                 })
             );
@@ -769,6 +880,8 @@ export function PackageForm({ package: pkg, services, collateralTypes }: Package
                                     onToggleOption={toggleOption}
                                     onToggleFeature={toggleFeature}
                                     onToggleDesignChoice={toggleDesignChoice}
+                                    onUpdateGroupSelectionType={updateDesignChoiceGroupSelectionType}
+                                    onUpdateOptionsSelectionType={updateOptionsSelectionType}
                                     onChangeDesignation={changeItemDesignation}
                                 />
                             );

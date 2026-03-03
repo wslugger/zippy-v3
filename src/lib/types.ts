@@ -116,6 +116,17 @@ export const PackageServiceInclusionSchema = z.object({
       })
     )
     .default([]),
+  // Group-level settings (e.g. single vs multi select)
+  designChoiceGroupSettings: z
+    .array(
+      z.object({
+        groupId: z.string(),
+        selectionType: z.enum(["single", "multi"]),
+      })
+    )
+    .default([]),
+  // Options-level selection mode (single vs multi)
+  optionsSelectionType: z.enum(["single", "multi"]).default("multi"),
 });
 export type PackageServiceInclusion = z.infer<typeof PackageServiceInclusionSchema>;
 

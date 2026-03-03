@@ -184,13 +184,33 @@ export function ServiceForm({ initialData, serviceId }: ServiceFormProps) {
 
     const onSubmit = async (data: ServiceFormValues) => {
         try {
+            // Clean up empty lines in all string arrays
+            const cleanData = {
+                ...data,
+                constraints: data.constraints?.filter(l => l.trim().length > 0) || [],
+                assumptions: data.assumptions?.filter(l => l.trim().length > 0) || [],
+                serviceOptions: data.serviceOptions.map(opt => ({
+                    ...opt,
+                    constraints: opt.constraints?.filter(l => l.trim().length > 0) || [],
+                    assumptions: opt.assumptions?.filter(l => l.trim().length > 0) || [],
+                    designOptions: opt.designOptions?.map(group => ({
+                        ...group,
+                        choices: group.choices.map(choice => ({
+                            ...choice,
+                            constraints: choice.constraints?.filter(l => l.trim().length > 0) || [],
+                            assumptions: choice.assumptions?.filter(l => l.trim().length > 0) || [],
+                        }))
+                    }))
+                }))
+            };
+
             const url = serviceId ? `/api/services/${serviceId}` : "/api/services";
             const method = serviceId ? "PUT" : "POST";
 
             const response = await fetch(url, {
                 method,
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(data),
+                body: JSON.stringify(cleanData),
             });
 
             if (!response.ok) {
@@ -360,8 +380,8 @@ export function ServiceForm({ initialData, serviceId }: ServiceFormProps) {
                                                     <Textarea
                                                         placeholder="Constraints or limitations..."
                                                         className="min-h-[150px] font-mono text-sm"
-                                                        value={field.value?.join("\n")}
-                                                        onChange={(e) => field.onChange(e.target.value.split("\n").filter(l => l.trim()))}
+                                                        value={field.value?.join("\n") || ""}
+                                                        onChange={(e) => field.onChange(e.target.value.split("\n"))}
                                                     />
                                                 </FormControl>
                                                 <FormMessage />
@@ -385,8 +405,8 @@ export function ServiceForm({ initialData, serviceId }: ServiceFormProps) {
                                                     <Textarea
                                                         placeholder="What is assumed to be true or provided..."
                                                         className="min-h-[150px] font-mono text-sm"
-                                                        value={field.value?.join("\n")}
-                                                        onChange={(e) => field.onChange(e.target.value.split("\n").filter(l => l.trim()))}
+                                                        value={field.value?.join("\n") || ""}
+                                                        onChange={(e) => field.onChange(e.target.value.split("\n"))}
                                                     />
                                                 </FormControl>
                                                 <FormMessage />
@@ -685,7 +705,7 @@ function DesignOptionChoices({ serviceIndex, groupIndex, control }: any) {
                                                 placeholder="Enter caveats..."
                                                 className="min-h-[80px] text-sm bg-white"
                                                 value={field.value?.join("\n") || ""}
-                                                onChange={(e) => field.onChange(e.target.value.split("\n").filter(l => l.trim()))}
+                                                onChange={(e) => field.onChange(e.target.value.split("\n"))}
                                             />
                                         </FormControl>
                                     </FormItem>
@@ -703,7 +723,7 @@ function DesignOptionChoices({ serviceIndex, groupIndex, control }: any) {
                                                 placeholder="Enter assumptions..."
                                                 className="min-h-[80px] text-sm bg-white"
                                                 value={field.value?.join("\n") || ""}
-                                                onChange={(e) => field.onChange(e.target.value.split("\n").filter(l => l.trim()))}
+                                                onChange={(e) => field.onChange(e.target.value.split("\n"))}
                                             />
                                         </FormControl>
                                     </FormItem>

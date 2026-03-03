@@ -141,13 +141,20 @@ export function FeatureDialog({
 
     const onSubmit = async (data: FeatureFormValues) => {
         try {
+            // Clean up empty lines
+            const cleanData = {
+                ...data,
+                caveats: data.caveats?.filter(l => l.trim().length > 0) || [],
+                assumptions: data.assumptions?.filter(l => l.trim().length > 0) || [],
+            };
+
             const url = isEditing ? `/api/features/${feature.id}` : "/api/features";
             const method = isEditing ? "PUT" : "POST";
 
             const response = await fetch(url, {
                 method,
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(data),
+                body: JSON.stringify(cleanData),
             });
 
             if (!response.ok) throw new Error("Failed to save feature");
@@ -281,7 +288,7 @@ export function FeatureDialog({
                                                 value={field.value.join("\n")}
                                                 onChange={(e) =>
                                                     field.onChange(
-                                                        e.target.value.split("\n").filter((l) => l.trim())
+                                                        e.target.value.split("\n")
                                                     )
                                                 }
                                             />
@@ -306,7 +313,7 @@ export function FeatureDialog({
                                                 value={field.value.join("\n")}
                                                 onChange={(e) =>
                                                     field.onChange(
-                                                        e.target.value.split("\n").filter((l) => l.trim())
+                                                        e.target.value.split("\n")
                                                     )
                                                 }
                                             />
