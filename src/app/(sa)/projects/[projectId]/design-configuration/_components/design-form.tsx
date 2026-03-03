@@ -263,52 +263,74 @@ export function DesignForm({ project, packageData, services, features }: any) {
                                                         acc[c.groupId].push(c);
                                                         return acc;
                                                     }, {});
-                                                    return Object.entries(choiceGroups).map(([groupId, choices]: [string, any]) => (
-                                                        <div key={groupId} className="p-3 border rounded bg-background/50 space-y-3">
-                                                            <h5 className="font-medium">{groupId} (Group)</h5>
-                                                            <div className="space-y-2 pl-2">
-                                                                {choices.map((choiceInc: any) => {
-                                                                    const isRequired = choiceInc.designation === "required";
-                                                                    const groupSelection = sState.selectedDesignChoices[groupId] || [];
-                                                                    const isSelected = isRequired || groupSelection.includes(choiceInc.choiceValue);
 
-                                                                    const toggleChoice = (checked: boolean) => {
-                                                                        if (isRequired) return;
-                                                                        setServiceState(inc.serviceId, (prev: any) => {
-                                                                            const grps = { ...prev.selectedDesignChoices };
-                                                                            const active = new Set(grps[groupId] || []);
-                                                                            if (checked) active.add(choiceInc.choiceValue);
-                                                                            else active.delete(choiceInc.choiceValue);
-                                                                            grps[groupId] = Array.from(active);
-                                                                            return { ...prev, selectedDesignChoices: grps };
-                                                                        });
-                                                                    };
+                                                    const getDesignLabels = (groupId: string, choiceValue: string) => {
+                                                        for (const opt of serviceDef.serviceOptions || []) {
+                                                            for (const group of opt.designOptions || []) {
+                                                                if (group.groupId === groupId) {
+                                                                    const choice = group.choices?.find((c: any) => c.id === choiceValue || c.value === choiceValue);
+                                                                    if (choice) {
+                                                                        return { groupLabel: group.groupLabel || group.label || groupId, choiceLabel: choice.name || choice.label || choiceValue };
+                                                                    }
+                                                                    return { groupLabel: group.groupLabel || group.label || groupId, choiceLabel: choiceValue };
+                                                                }
+                                                            }
+                                                        }
+                                                        return { groupLabel: groupId, choiceLabel: choiceValue };
+                                                    };
 
-                                                                    return (
-                                                                        <div key={choiceInc.choiceValue} className="flex items-center gap-3">
-                                                                            <Checkbox
-                                                                                id={`choice-${choiceInc.choiceValue}`}
-                                                                                checked={isSelected}
-                                                                                onCheckedChange={toggleChoice}
-                                                                                disabled={isRequired}
-                                                                            />
-                                                                            {sState.aiRecommended?.[`${groupId}-${choiceInc.choiceValue}`] && (
-                                                                                <div className="text-primary animate-pulse" title="Recommended from requirements">
-                                                                                    <Sparkles size={14} />
+                                                    return Object.entries(choiceGroups).map(([groupId, choices]: [string, any]) => {
+                                                        // Get group label from the first choice
+                                                        const { groupLabel } = getDesignLabels(groupId, choices[0]?.choiceValue);
+
+                                                        return (
+                                                            <div key={groupId} className="p-3 border rounded bg-background/50 space-y-3">
+                                                                <h5 className="font-medium">{groupLabel}</h5>
+                                                                <div className="space-y-2 pl-2">
+                                                                    {choices.map((choiceInc: any) => {
+                                                                        const isRequired = choiceInc.designation === "required";
+                                                                        const groupSelection = sState.selectedDesignChoices[groupId] || [];
+                                                                        const isSelected = isRequired || groupSelection.includes(choiceInc.choiceValue);
+                                                                        const { choiceLabel } = getDesignLabels(groupId, choiceInc.choiceValue);
+
+                                                                        const toggleChoice = (checked: boolean) => {
+                                                                            if (isRequired) return;
+                                                                            setServiceState(inc.serviceId, (prev: any) => {
+                                                                                const grps = { ...prev.selectedDesignChoices };
+                                                                                const active = new Set(grps[groupId] || []);
+                                                                                if (checked) active.add(choiceInc.choiceValue);
+                                                                                else active.delete(choiceInc.choiceValue);
+                                                                                grps[groupId] = Array.from(active);
+                                                                                return { ...prev, selectedDesignChoices: grps };
+                                                                            });
+                                                                        };
+
+                                                                        return (
+                                                                            <div key={choiceInc.choiceValue} className="flex items-center gap-3">
+                                                                                <Checkbox
+                                                                                    id={`choice-${choiceInc.choiceValue}`}
+                                                                                    checked={isSelected}
+                                                                                    onCheckedChange={toggleChoice}
+                                                                                    disabled={isRequired}
+                                                                                />
+                                                                                {sState.aiRecommended?.[`${groupId}-${choiceInc.choiceValue}`] && (
+                                                                                    <div className="text-primary animate-pulse" title="Recommended from requirements">
+                                                                                        <Sparkles size={14} />
+                                                                                    </div>
+                                                                                )}
+                                                                                <Label htmlFor={`choice-${choiceInc.choiceValue}`} className="cursor-pointer">
+                                                                                    {choiceLabel}
+                                                                                </Label>
+                                                                                <div className="ml-auto scale-90 opacity-80">
+                                                                                    <DesignationBadge designation={choiceInc.designation} />
                                                                                 </div>
-                                                                            )}
-                                                                            <Label htmlFor={`choice-${choiceInc.choiceValue}`} className="cursor-pointer">
-                                                                                {choiceInc.choiceValue}
-                                                                            </Label>
-                                                                            <div className="ml-auto scale-90 opacity-80">
-                                                                                <DesignationBadge designation={choiceInc.designation} />
                                                                             </div>
-                                                                        </div>
-                                                                    );
-                                                                })}
+                                                                        );
+                                                                    })}
+                                                                </div>
                                                             </div>
-                                                        </div>
-                                                    ));
+                                                        );
+                                                    });
                                                 })()}
                                             </div>
                                         </div>
