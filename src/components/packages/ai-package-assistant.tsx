@@ -141,6 +141,7 @@ export function AiPackageAssistant({
                                     ? "bg-background text-foreground shadow-sm"
                                     : "text-muted-foreground hover:text-foreground"
                             )}
+                            data-testid={`ai-tab-${t}`}
                         >
                             {t === "upload" ? (
                                 <Upload className="h-3.5 w-3.5" />
@@ -197,6 +198,7 @@ export function AiPackageAssistant({
                                         <button
                                             onClick={(e) => { e.stopPropagation(); removeFile(f.name); }}
                                             className="text-muted-foreground hover:text-destructive transition-colors"
+                                            data-testid={`remove-file-${f.name}`}
                                         >
                                             <X className="h-3.5 w-3.5" />
                                         </button>
@@ -256,7 +258,7 @@ export function AiPackageAssistant({
                 {/* Result card */}
                 {recommendation && (
                     <div className="p-4 bg-green-50 border border-green-200 rounded-xl space-y-3">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2" data-testid="ai-recommendation-header">
                             <CheckCircle2 className="h-5 w-5 text-green-600" />
                             <span className="font-semibold text-green-800 text-sm">AI Recommendation Ready</span>
                             <Badge className="ml-auto bg-green-600 text-white text-xs hover:bg-green-600">
