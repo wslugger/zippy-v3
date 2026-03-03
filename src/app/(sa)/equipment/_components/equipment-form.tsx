@@ -45,6 +45,8 @@ export function EquipmentForm({
     const environments = txExtras.environments || ["Indoor", "Outdoor"];
     const portTypes = txExtras.portTypes || ["10/100/1000", "1/2.5/5/10 Gbps", "10G SFP+", "40G QSFP"];
     const wifiStandards = txExtras.wifistandard || ["Wi-Fi 5", "Wi-Fi 6", "Wi-Fi 6E", "Wi-Fi 7"];
+    const mimoDensities = txExtras.mimoDensity || ["1x1:1", "2x2:2", "4x4:4", "8x8:8"];
+    const mountingOptions = txExtras.mountingOptions || ["Ceiling", "Wall", "Desktop", "Outdoor Pole"];
 
     const defaultValues: Partial<EquipmentPayload> = {
         model: initialData?.model || "",
@@ -655,6 +657,77 @@ export function EquipmentForm({
                                                             {environments.map((env: string) => <SelectItem key={env} value={env}>{env}</SelectItem>)}
                                                         </SelectContent>
                                                     </Select>
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name="specs.uplinkType"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Uplink Type</FormLabel>
+                                                    <Select onValueChange={field.onChange} value={(field.value as string) || ""}>
+                                                        <FormControl>
+                                                            <SelectTrigger><SelectValue placeholder="Select uplink port type" /></SelectTrigger>
+                                                        </FormControl>
+                                                        <SelectContent>
+                                                            {portTypes.map((pt: string) => (
+                                                                <SelectItem key={pt} value={pt}>{pt}</SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name="specs.mimoDensity"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>MIMO Density</FormLabel>
+                                                    <Select onValueChange={field.onChange} value={(field.value as string) || ""}>
+                                                        <FormControl>
+                                                            <SelectTrigger><SelectValue placeholder="Select MIMO configuration" /></SelectTrigger>
+                                                        </FormControl>
+                                                        <SelectContent>
+                                                            {mimoDensities.map((m: string) => (
+                                                                <SelectItem key={m} value={m}>{m}</SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name="specs.mountingOptions"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Mounting Options</FormLabel>
+                                                    <div className="flex flex-col gap-2 pt-1">
+                                                        {mountingOptions.map((opt: string) => {
+                                                            const current: string[] = (field.value as string[]) || [];
+                                                            const checked = current.includes(opt);
+                                                            return (
+                                                                <label key={opt} className="flex items-center gap-2 text-sm cursor-pointer">
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        checked={checked}
+                                                                        onChange={() => {
+                                                                            field.onChange(
+                                                                                checked
+                                                                                    ? current.filter((v) => v !== opt)
+                                                                                    : [...current, opt]
+                                                                            );
+                                                                        }}
+                                                                        className="h-4 w-4 rounded border-zinc-300"
+                                                                    />
+                                                                    {opt}
+                                                                </label>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                    <FormMessage />
                                                 </FormItem>
                                             )}
                                         />

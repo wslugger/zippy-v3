@@ -59,6 +59,9 @@ export const WLANSpecsSchema = z.object({
     mimoBandwidth: z.string().optional(),
     powerDrawWatts: z.number().optional(),
     environment: z.string().optional(), // Indoor, Outdoor
+    uplinkType: z.string().optional(),
+    mimoDensity: z.string().optional(),
+    mountingOptions: z.array(z.string()).optional(),
 });
 
 // -----------------------------------------------------------------
