@@ -87,3 +87,24 @@ export async function PATCH(
 
   return NextResponse.json(project);
 }
+
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ projectId: string }> }
+) {
+  const { projectId } = await params;
+
+  try {
+    await prisma.project.delete({
+      where: { id: projectId },
+    });
+
+    return new NextResponse(null, { status: 204 });
+  } catch (error) {
+    console.error("[PROJECT_DELETE]", error);
+    return NextResponse.json(
+      { error: "Failed to delete project" },
+      { status: 500 }
+    );
+  }
+}

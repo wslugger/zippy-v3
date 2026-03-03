@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import type { ModuleStates, ModuleState, Collateral } from "@/lib/types";
+import { ProjectActions } from "./_components/project-actions";
 
 export default async function ProjectOverviewPage({
   params,
@@ -29,7 +30,13 @@ export default async function ProjectOverviewPage({
       <PageHeader
         title={project.customerName}
         description={project.description || "No description provided"}
-      />
+      >
+        <ProjectActions
+          projectId={projectId}
+          customerName={project.customerName}
+          description={project.description}
+        />
+      </PageHeader>
 
       {/* Module Status Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
