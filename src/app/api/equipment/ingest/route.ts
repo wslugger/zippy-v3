@@ -116,6 +116,12 @@ export async function POST(req: Request) {
         // Extract text from URL if provided
         if (ingestUrl) {
             try {
+                // Validate URL scheme to prevent SSRF
+                const parsedUrl = new URL(ingestUrl);
+                if (!["http:", "https:"].includes(parsedUrl.protocol)) {
+                    return NextResponse.json({ error: "Only http and https URLs are supported" }, { status: 400 });
+                }
+
                 const response = await fetch(ingestUrl);
                 if (!response.ok) throw new Error(`Failed to fetch URL: ${response.statusText}`);
 
@@ -213,7 +219,16 @@ export async function POST(req: Request) {
             );
         }
 
-        const parsed = JSON.parse(jsonMatch[0]);
+        let parsed;
+        try {
+            parsed = JSON.parse(jsonMatch[0]);
+        } catch {
+            console.error("Gemini returned invalid JSON:", jsonMatch[0]);
+            return NextResponse.json(
+                { error: "AI returned an unexpected format. Please try again." },
+                { status: 502 }
+            );
+        }
 
         // Normalize: ensure we always return an items array
         let items = Array.isArray(parsed.items)

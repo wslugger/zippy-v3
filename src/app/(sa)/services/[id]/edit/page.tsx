@@ -19,7 +19,7 @@ export default async function EditServicePage({ params }: EditServicePageProps) 
     // Format Prisma JSON fields for client-side form
     const formattedService = {
         ...service,
-        serviceOptions: (service.serviceOptions as any[]).map(opt => ({
+        serviceOptions: ((service.serviceOptions as any[]) || []).map(opt => ({
             ...opt,
             constraints: opt.constraints || [],
             assumptions: opt.assumptions || [],

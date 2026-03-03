@@ -132,7 +132,14 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "AI returned an unexpected format" }, { status: 502 });
         }
 
-        const parsed = AIRecommendationSchema.safeParse(JSON.parse(jsonMatch[0]));
+        let rawParsed;
+        try {
+            rawParsed = JSON.parse(jsonMatch[0]);
+        } catch {
+            console.error("Gemini returned invalid JSON:", jsonMatch[0]);
+            return NextResponse.json({ error: "AI returned an unexpected format" }, { status: 502 });
+        }
+        const parsed = AIRecommendationSchema.safeParse(rawParsed);
         if (!parsed.success) {
             console.error("AI recommendation parse error:", parsed.error, rawResponse);
             return NextResponse.json({ error: "AI response validation failed" }, { status: 502 });

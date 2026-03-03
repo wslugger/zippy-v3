@@ -78,7 +78,13 @@ export async function POST(
             jsonStr = jsonStr.substring(startIdx, endIdx + 1);
         }
 
-        const result = JSON.parse(jsonStr);
+        let result;
+        try {
+            result = JSON.parse(jsonStr);
+        } catch {
+            console.error("[generate_exec_summary] Invalid JSON from AI:", jsonStr);
+            return NextResponse.json({ error: "AI returned an unexpected format" }, { status: 502 });
+        }
         console.log("[generate_exec_summary] raw AI result keys:", Object.keys(result));
 
         // Normalize keys — Gemini may use snake_case or different naming
@@ -91,7 +97,7 @@ export async function POST(
     } catch (error: any) {
         console.error("[generate_exec_summary_error]", error);
         return NextResponse.json(
-            { error: error?.message || "Failed to generate executive summary" },
+            { error: "Failed to generate executive summary" },
             { status: 500 }
         );
     }

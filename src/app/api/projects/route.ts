@@ -3,11 +3,15 @@ import { prisma } from "@/lib/prisma";
 import { CreateProjectSchema, DEFAULT_MODULE_STATES } from "@/lib/types";
 
 export async function GET() {
-  const projects = await prisma.project.findMany({
-    orderBy: { updatedAt: "desc" },
-  });
-
-  return NextResponse.json(projects);
+  try {
+    const projects = await prisma.project.findMany({
+      orderBy: { updatedAt: "desc" },
+    });
+    return NextResponse.json(projects);
+  } catch (error) {
+    console.error("GET /api/projects error:", error);
+    return NextResponse.json({ error: "Failed to fetch projects" }, { status: 500 });
+  }
 }
 
 export async function POST(request: NextRequest) {

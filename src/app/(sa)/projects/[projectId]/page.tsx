@@ -23,7 +23,7 @@ export default async function ProjectOverviewPage({
   if (!project) notFound();
 
   const moduleStates = project.moduleStates as ModuleStates;
-  const collateral = project.packageCollateral as unknown as Collateral[];
+  const collateral = (project.packageCollateral as unknown as Collateral[]) ?? [];
 
   return (
     <div className="space-y-6">

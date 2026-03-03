@@ -293,7 +293,7 @@ export function DesignForm({ project, packageData, services, features }: any) {
                                                     return (
                                                         <div key={optInc.optionId} className="flex gap-4 items-start p-3 border rounded bg-background/50">
                                                             <Checkbox
-                                                                id={`opt - ${optInc.optionId} `}
+                                                                id={`opt-${optInc.optionId}`}
                                                                 checked={isSelected}
                                                                 onCheckedChange={toggleOption}
                                                                 disabled={isRequired}
@@ -305,7 +305,7 @@ export function DesignForm({ project, packageData, services, features }: any) {
                                                                 </div>
                                                             )}
                                                             <div className="space-y-1 w-full">
-                                                                <Label htmlFor={`opt - ${optInc.optionId} `} className="text-base font-medium leading-none cursor-pointer flex justify-between">
+                                                                <Label htmlFor={`opt-${optInc.optionId}`} className="text-base font-medium leading-none cursor-pointer flex justify-between">
                                                                     <span>{optionDef?.name || "Unknown Option"}</span>
                                                                     <DesignationBadge designation={optInc.designation} />
                                                                 </Label>
@@ -438,17 +438,17 @@ export function DesignForm({ project, packageData, services, features }: any) {
                                                                         return (
                                                                             <div key={choiceInc.choiceValue} className="flex items-center gap-3">
                                                                                 <Checkbox
-                                                                                    id={`choice - ${choiceInc.choiceValue} `}
+                                                                                    id={`choice-${choiceInc.choiceValue}`}
                                                                                     checked={isSelected}
                                                                                     onCheckedChange={toggleChoice}
                                                                                     disabled={isRequired}
                                                                                 />
-                                                                                {sState.aiRecommended?.[`${groupId} -${choiceInc.choiceValue} `] && (
+                                                                                {sState.aiRecommended?.[`${groupId}-${choiceInc.choiceValue}`] && (
                                                                                     <div className="text-primary animate-pulse" title="Recommended from requirements">
                                                                                         <Sparkles size={14} />
                                                                                     </div>
                                                                                 )}
-                                                                                <Label htmlFor={`choice - ${choiceInc.choiceValue} `} className="cursor-pointer">
+                                                                                <Label htmlFor={`choice-${choiceInc.choiceValue}`} className="cursor-pointer">
                                                                                     {choiceLabel}
                                                                                 </Label>
                                                                                 <div className="ml-auto scale-90 opacity-80">

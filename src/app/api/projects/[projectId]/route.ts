@@ -7,17 +7,22 @@ export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ projectId: string }> }
 ) {
-  const { projectId } = await params;
+  try {
+    const { projectId } = await params;
 
-  const project = await prisma.project.findUnique({
-    where: { id: projectId },
-  });
+    const project = await prisma.project.findUnique({
+      where: { id: projectId },
+    });
 
-  if (!project) {
-    return NextResponse.json({ error: "Project not found" }, { status: 404 });
+    if (!project) {
+      return NextResponse.json({ error: "Project not found" }, { status: 404 });
+    }
+
+    return NextResponse.json(project);
+  } catch (error) {
+    console.error("GET /api/projects/[projectId] error:", error);
+    return NextResponse.json({ error: "Failed to fetch project" }, { status: 500 });
   }
-
-  return NextResponse.json(project);
 }
 
 export async function PATCH(
@@ -90,7 +95,7 @@ export async function PATCH(
   } catch (error: any) {
     console.error("[PROJECT_PATCH]", error);
     return NextResponse.json(
-      { error: "Internal Server Error", details: error?.message || String(error) },
+      { error: "Internal Server Error" },
       { status: 500 }
     );
   }

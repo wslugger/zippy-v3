@@ -101,7 +101,7 @@ export default async function EquipmentCatalogPage() {
                                     <div className="flex flex-col text-right">
                                         <span className="text-zinc-400 font-medium uppercase tracking-wider">Pricing</span>
                                         <span className="font-semibold text-zinc-900">
-                                            ${item.pricing?.purchasePrice.toLocaleString()} / ${item.pricing?.rentalPrice.toLocaleString()}
+                                            ${(item.pricing?.purchasePrice ?? 0).toLocaleString()} / ${(item.pricing?.rentalPrice ?? 0).toLocaleString()}
                                         </span>
                                     </div>
                                 </div>

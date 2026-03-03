@@ -67,7 +67,10 @@ export type ServiceOption = z.infer<typeof ServiceOptionSchema>;
 
 export const CollateralSchema = z.object({
   title: z.string().min(1, "Title is required"),
-  url: z.string().url("Must be a valid URL"),
+  url: z.string().url("Must be a valid URL").refine(
+    (val) => val.startsWith("http://") || val.startsWith("https://"),
+    { message: "URL must use http or https protocol" }
+  ),
   type: z.string().min(1, "Type is required"),
 });
 export type Collateral = z.infer<typeof CollateralSchema>;
@@ -172,7 +175,7 @@ export const AIPromptSchema = z.object({
   slug: z.string().min(1),
   displayName: z.string().min(1),
   model: z.string().min(1),
-  temperature: z.number().min(0).max(1),
+  temperature: z.number().min(0).max(2),
   systemInstruction: z.string(),
   userPromptTemplate: z.string(),
 });

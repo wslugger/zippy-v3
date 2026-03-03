@@ -95,11 +95,17 @@ export async function POST(
             jsonStr = jsonStr.substring(startIdx, endIdx + 1);
         }
 
-        const recommendations = JSON.parse(jsonStr);
+        let recommendations;
+        try {
+            recommendations = JSON.parse(jsonStr);
+        } catch {
+            console.error("[AUTO_SELECT_ERROR] Invalid JSON from AI:", jsonStr);
+            return NextResponse.json({ error: "AI returned an unexpected format" }, { status: 502 });
+        }
 
         return NextResponse.json(recommendations);
     } catch (error: any) {
         console.error("[AUTO_SELECT_ERROR]", error);
-        return NextResponse.json({ error: error?.message || "Internal Error" }, { status: 500 });
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }
