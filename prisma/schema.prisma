@@ -80,7 +80,7 @@ model Project {
   aiRecommendation  Json?    // { packageId, confidence, reasoning }
 
   // Module 2 output (stub)
-  customizations    Json?
+  designConfiguration Json?
 
   // Module 3 output (stub)
   bomSnapshot       Json[]

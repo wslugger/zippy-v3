@@ -87,6 +87,23 @@ export default async function ProjectOverviewPage({
           )}
         </CardContent>
       </Card>
+
+      {/* Module 2: Design Configuration */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Design Configuration</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Configure the customer design options and output the Exec Summary.
+          </p>
+          <Link href={`/projects/${projectId}/design-configuration`}>
+            <Button disabled={!project.packageName}>
+              {moduleStates?.configuration === "completed" ? "Review Configuration" : "Configure Design"}
+            </Button>
+          </Link>
+        </CardContent>
+      </Card>
     </div>
   );
 }

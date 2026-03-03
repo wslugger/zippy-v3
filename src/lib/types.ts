@@ -21,7 +21,7 @@ export type ModuleState = z.infer<typeof ModuleStateEnum>;
 
 export const ModuleStatesSchema = z.object({
   ingestion: ModuleStateEnum,
-  customization: ModuleStateEnum,
+  configuration: ModuleStateEnum,
   bomGeneration: ModuleStateEnum,
   hldGeneration: ModuleStateEnum,
 });
@@ -29,7 +29,7 @@ export type ModuleStates = z.infer<typeof ModuleStatesSchema>;
 
 export const DEFAULT_MODULE_STATES: ModuleStates = {
   ingestion: "not_started",
-  customization: "not_started",
+  configuration: "not_started",
   bomGeneration: "not_started",
   hldGeneration: "not_started",
 };
@@ -172,6 +172,17 @@ export const AIRecommendationSchema = z.object({
 });
 export type AIRecommendation = z.infer<typeof AIRecommendationSchema>;
 
+export const DesignConfigurationSchema = z.object({
+  execSummary: z.string().optional(),
+  services: z.array(z.object({
+    serviceId: z.string(),
+    selectedOptions: z.array(z.string()),
+    selectedDesignChoices: z.record(z.string(), z.array(z.string())),
+    aiRecommended: z.record(z.string(), z.boolean()).optional(), // key can be optionId or groupId-choiceValue -> true
+  })).optional(),
+});
+export type DesignConfiguration = z.infer<typeof DesignConfigurationSchema>;
+
 export const UpdateProjectSchema = z.object({
   customerName: z.string().min(1).max(200).optional(),
   description: z.string().max(1000).optional(),
@@ -182,5 +193,6 @@ export const UpdateProjectSchema = z.object({
   packageCollateral: z.array(CollateralSchema).optional(),
   moduleStates: ModuleStatesSchema.partial().optional(),
   aiRecommendation: AIRecommendationSchema.optional(),
+  designConfiguration: DesignConfigurationSchema.optional(),
 });
 export type UpdateProjectInput = z.infer<typeof UpdateProjectSchema>;

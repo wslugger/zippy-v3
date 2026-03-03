@@ -3,7 +3,7 @@
 
 export const MODULE_LABELS = {
   ingestion: "Ingestion & Package",
-  customization: "Design Customization",
+  configuration: "Design Configuration",
   bomGeneration: "BOM Generation",
   hldGeneration: "HLD Generation",
 } as const;

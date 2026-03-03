@@ -65,10 +65,10 @@ export async function PATCH(
     updateData.moduleStates = {
       ...states,
       ingestion: "completed",
-      customization:
-        states.customization === "completed"
+      configuration:
+        states.configuration === "completed"
           ? "out_of_date"
-          : states.customization,
+          : states.configuration,
       bomGeneration:
         states.bomGeneration === "completed"
           ? "out_of_date"
