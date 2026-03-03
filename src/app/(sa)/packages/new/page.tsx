@@ -14,7 +14,9 @@ export default async function NewPackagePage() {
     });
 
     const taxonomy = await prisma.globalTaxonomy.findFirst();
-    const collateralTypes = taxonomy?.collateralTypes || ["PDF", "Diagram", "Reference", "Video"];
+    const collateralTypes = taxonomy?.collateralTypes?.length
+        ? taxonomy.collateralTypes
+        : ["PDF", "Diagram", "Reference", "Video"];
 
     const servicesWithFeatures = services.map((s) => ({
         ...s,

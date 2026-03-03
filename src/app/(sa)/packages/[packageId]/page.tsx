@@ -18,7 +18,9 @@ export default async function EditPackagePage({
 
     if (!pkg) notFound();
 
-    const collateralTypes = taxonomy?.collateralTypes || ["PDF", "Diagram", "Reference", "Video"];
+    const collateralTypes = taxonomy?.collateralTypes?.length
+        ? taxonomy.collateralTypes
+        : ["PDF", "Diagram", "Reference", "Video"];
 
     const allFeatures = await prisma.feature.findMany({
         where: { service: { in: services.map((s) => s.name) } },
