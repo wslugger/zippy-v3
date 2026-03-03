@@ -23,6 +23,7 @@ import { Switch } from "@/components/ui/switch";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useMemo } from "react";
 import { CreateEquipmentSchema, EquipmentPayload } from "@/lib/zod/equipment";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export function EquipmentForm({
     initialData,
@@ -49,7 +50,7 @@ export function EquipmentForm({
         vendorId: initialData?.vendorId || "",
         model: initialData?.model || "",
         family: initialData?.family || "",
-        role: initialData?.role || roles[0],
+        roles: initialData?.roles || (initialData?.role ? [initialData.role] : []),
         service: initialData?.service || "",
         serviceOption: initialData?.serviceOption || "",
         active: initialData?.active ?? true,
@@ -68,7 +69,7 @@ export function EquipmentForm({
         defaultValues: defaultValues as any,
     });
 
-    const selectedRole = form.watch("role");
+    const selectedRoles: string[] = form.watch("roles") || [];
     const selectedService = form.watch("service");
 
     const availableOptions = useMemo(() => {
@@ -168,22 +169,48 @@ export function EquipmentForm({
                         />
                         <FormField
                             control={form.control}
-                            name="role"
-                            render={({ field }) => (
+                            name="roles"
+                            render={() => (
                                 <FormItem>
-                                    <FormLabel>Role (Discriminator)</FormLabel>
-                                    <Select onValueChange={field.onChange} value={field.value}>
-                                        <FormControl>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select a primary technical role" />
-                                            </SelectTrigger>
-                                        </FormControl>
-                                        <SelectContent>
-                                            {roles.map((r: string) => (
-                                                <SelectItem key={r} value={r}>{r}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                                    <div className="mb-4">
+                                        <FormLabel className="text-base">Roles (Capabilities)</FormLabel>
+                                        <CardDescription>Select all applicable functionality roles</CardDescription>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        {roles.map((r: string) => (
+                                            <FormField
+                                                key={r}
+                                                control={form.control}
+                                                name="roles"
+                                                render={({ field }) => {
+                                                    return (
+                                                        <FormItem
+                                                            key={r}
+                                                            className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4"
+                                                        >
+                                                            <FormControl>
+                                                                <Checkbox
+                                                                    checked={field.value?.includes(r)}
+                                                                    onCheckedChange={(checked) => {
+                                                                        return checked
+                                                                            ? field.onChange([...(field.value || []), r])
+                                                                            : field.onChange(
+                                                                                field.value?.filter(
+                                                                                    (value: string) => value !== r
+                                                                                )
+                                                                            )
+                                                                    }}
+                                                                />
+                                                            </FormControl>
+                                                            <FormLabel className="text-sm font-normal">
+                                                                {r}
+                                                            </FormLabel>
+                                                        </FormItem>
+                                                    )
+                                                }}
+                                            />
+                                        ))}
+                                    </div>
                                     <FormMessage />
                                 </FormItem>
                             )}
@@ -385,19 +412,19 @@ export function EquipmentForm({
                             <div className="flex items-center gap-2">
                                 <span className="text-xl tracking-tight font-semibold text-zinc-900">Technical Specifications</span>
                                 <span className="text-sm font-normal text-zinc-500 bg-zinc-100 px-2 py-0.5 rounded-full">
-                                    for {selectedRole || "Equipment"}
+                                    for {selectedRoles.length > 0 ? selectedRoles.join(" + ") : "Equipment"}
                                 </span>
                             </div>
                         </AccordionTrigger>
                         <AccordionContent className="p-6">
 
-                            {!selectedRole && (
+                            {selectedRoles.length === 0 && (
                                 <div className="text-zinc-500 italic p-4 text-center">
-                                    Select a role above to reveal corresponding technical constraint fields.
+                                    Select at least one role above to reveal corresponding technical constraint fields.
                                 </div>
                             )}
 
-                            {selectedRole?.includes("WAN") && (
+                            {selectedRoles.includes("WAN") && (
                                 <div className="space-y-6">
                                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                         <FormField
@@ -522,7 +549,7 @@ export function EquipmentForm({
                                 </div>
                             )}
 
-                            {selectedRole?.includes("LAN") && (
+                            {selectedRoles.includes("LAN") && (
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                     <FormField
                                         control={form.control}
@@ -583,7 +610,7 @@ export function EquipmentForm({
                                 </div>
                             )}
 
-                            {selectedRole?.includes("WLAN") && (
+                            {selectedRoles.includes("WLAN") && (
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                     <FormField
                                         control={form.control}

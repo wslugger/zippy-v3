@@ -155,7 +155,7 @@ model Equipment {
   vendorId String?
   model    String
   family   String
-  role     String // Represents primary_purpose (WAN, LAN, WLAN, SECURITY, etc.)
+  roles    String[] // Represents primary_purposes (WAN, LAN, WLAN, SECURITY, etc.)
 
   // Service Catalog Mapping
   service       String // E.g., "Managed LAN"

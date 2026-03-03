@@ -9,7 +9,7 @@ export const BaseEquipmentSchema = z.object({
     vendorId: z.string().optional(),
     model: z.string().min(1, "Model is required"),
     family: z.string().min(1, "Family is required"),
-    role: z.string().min(1, "Role is required"),
+    roles: z.array(z.string()).min(1, "At least one role is required"),
 
     // Service Catalog Mapping
     service: z.string().min(1, "Service is required"),

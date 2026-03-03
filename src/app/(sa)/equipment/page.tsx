@@ -50,8 +50,8 @@ export default async function EquipmentCatalogPage() {
 
                                 <div className="pt-2 border-t border-zinc-100 flex items-center justify-between text-xs">
                                     <div className="flex flex-col">
-                                        <span className="text-zinc-400 font-medium uppercase tracking-wider">Role</span>
-                                        <span className="font-semibold text-zinc-700">{item.role}</span>
+                                        <span className="text-zinc-400 font-medium uppercase tracking-wider">Roles</span>
+                                        <span className="font-semibold text-zinc-700">{item.roles?.join(', ') || item.role || 'N/A'}</span>
                                     </div>
                                     <div className="flex flex-col text-right">
                                         <span className="text-zinc-400 font-medium uppercase tracking-wider">Pricing</span>
