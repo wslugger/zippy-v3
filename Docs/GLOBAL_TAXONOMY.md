@@ -19,10 +19,11 @@ The taxonomy is managed as a **Singleton Document** in MongoDB collection system
     "40G-Fiber",   
     "100G-Fiber"  
   \],  
-  "wifiStandards": \["Wi-Fi 5", "Wi-Fi 6", "Wi-Fi 6E", "Wi-Fi 7"\],  
-  "cellularTypes": \["LTE", "5G", "LTE/5G"\],  
-  "poeStandards": \["None", "PoE+", "PoE++", "UPoE"\],  
-  "mountingOptions": \["Rack", "Wall", "Desktop", "Ceiling"\]  
+  "wifiStandards": ["Wi-Fi 5", "Wi-Fi 6", "Wi-Fi 6E", "Wi-Fi 7"],  
+  "cellularTypes": ["LTE", "5G", "LTE/5G"],  
+  "poeStandards": ["None", "PoE+", "PoE++", "UPoE"],  
+  "mountingOptions": ["Rack", "Wall", "Desktop", "Ceiling"],
+  "collateralTypes": ["PDF", "Diagram", "Reference", "Video"]
 }
 
 ## **2\. Cross-Module Usage**

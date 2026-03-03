@@ -24,6 +24,7 @@ export default async function TaxonomyPage() {
             cellularTypes: taxonomy.cellularTypes,
             poeStandards: taxonomy.poeStandards,
             mountingOptions: taxonomy.mountingOptions,
+            collateralTypes: taxonomy.collateralTypes,
             ...(taxonomy.extraFields as Record<string, string[]> | null ?? {}),
         };
 

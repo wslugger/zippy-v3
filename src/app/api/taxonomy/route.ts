@@ -9,6 +9,7 @@ const KNOWN_FIELDS = [
   "cellularTypes",
   "poeStandards",
   "mountingOptions",
+  "collateralTypes",
 ] as const;
 
 type KnownField = (typeof KNOWN_FIELDS)[number];
@@ -38,6 +39,7 @@ export async function PUT(req: Request) {
       cellularTypes: Array.isArray(body.cellularTypes) ? body.cellularTypes : [],
       poeStandards: Array.isArray(body.poeStandards) ? body.poeStandards : [],
       mountingOptions: Array.isArray(body.mountingOptions) ? body.mountingOptions : [],
+      collateralTypes: Array.isArray(body.collateralTypes) ? body.collateralTypes : [],
     };
 
     // Everything else goes into extraFields
