@@ -15,8 +15,6 @@ export const BaseEquipmentSchema = z.object({
     service: z.string().min(1, "Service is required"),
     serviceOption: z.string().min(1, "Service Option is required"),
 
-    // Lifecycle
-    active: z.boolean().default(true),
     status: z.string().min(1, "Status is required"), // Managed via Taxonomy
     eosDate: z.string().datetime().nullable().optional(),
 });

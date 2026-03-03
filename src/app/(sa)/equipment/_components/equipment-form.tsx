@@ -44,6 +44,7 @@ export function EquipmentForm({
     const mgmtSizes = txExtras.managementSizes || ["Small", "Medium", "Large"];
     const environments = txExtras.environments || ["Indoor", "Outdoor"];
     const portTypes = txExtras.portTypes || ["10/100/1000", "1/2.5/5/10 Gbps", "10G SFP+", "40G QSFP"];
+    const wifiStandards = txExtras.wfiiStandard || ["Wi-Fi 5", "Wi-Fi 6", "Wi-Fi 6E", "Wi-Fi 7"];
 
     const defaultValues: Partial<EquipmentPayload> = {
         model: initialData?.model || "",
@@ -53,7 +54,6 @@ export function EquipmentForm({
         roles: initialData?.roles || (initialData?.role ? [initialData.role] : []),
         service: initialData?.service || "",
         serviceOption: initialData?.serviceOption || "",
-        active: initialData?.active ?? true,
         status: initialData?.status || statuses[0],
         eosDate: initialData?.eosDate ? new Date(initialData.eosDate).toISOString() : "",
         pricing: {
@@ -234,21 +234,6 @@ export function EquipmentForm({
                                         </SelectContent>
                                     </Select>
                                     <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="active"
-                            render={({ field }) => (
-                                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                                    <div className="space-y-0.5">
-                                        <FormLabel className="text-base">Active in Catalog</FormLabel>
-                                        <CardDescription>If off, this will be hidden from the BOM builder.</CardDescription>
-                                    </div>
-                                    <FormControl>
-                                        <Switch checked={field.value} onCheckedChange={field.onChange} />
-                                    </FormControl>
                                 </FormItem>
                             )}
                         />
@@ -630,10 +615,16 @@ export function EquipmentForm({
                                             render={({ field }) => (
                                                 <FormItem>
                                                     <FormLabel>Wi-Fi Standard</FormLabel>
-                                                    <FormControl>
-                                                        {/* @ts-ignore */}
-                                                        <Input placeholder="e.g., Wi-Fi 6" {...field} value={field.value || ""} />
-                                                    </FormControl>
+                                                    <Select onValueChange={field.onChange} value={(field.value as string) || ""}>
+                                                        <FormControl>
+                                                            <SelectTrigger><SelectValue placeholder="Select standard" /></SelectTrigger>
+                                                        </FormControl>
+                                                        <SelectContent>
+                                                            {wifiStandards.map((std: string) => (
+                                                                <SelectItem key={std} value={std}>{std}</SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
                                                 </FormItem>
                                             )}
                                         />

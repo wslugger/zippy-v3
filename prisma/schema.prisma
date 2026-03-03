@@ -161,8 +161,6 @@ model Equipment {
   service       String // E.g., "Managed LAN"
   serviceOption String // E.g., "Meraki switching"
 
-  // Lifecycle Management
-  active  Boolean   @default(true)
   status  String // Managed via Taxonomy
   eosDate DateTime?
 
