@@ -1,9 +1,13 @@
-import Link from "next/link";
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { PackageServiceInclusion, Collateral, InclusionDesignation } from "@/lib/types";
 import { INCLUSION_DESIGNATION_LABELS } from "@/lib/types";
+import { Loader2 } from "lucide-react";
 
 interface PackageCardProps {
   pkg: {
@@ -26,22 +30,65 @@ const DESIGNATION_BADGE_STYLES: Record<InclusionDesignation, string> = {
 };
 
 export function PackageCard({ pkg, projectId, isSelected, servicesCatalog = [] }: PackageCardProps) {
+  const router = useRouter();
+  const [isSelecting, setIsSelecting] = useState(false);
   const services = pkg.includedServices as PackageServiceInclusion[];
   const collateral = pkg.collateral as Collateral[];
 
+  async function handleSelect() {
+    if (isSelected || isSelecting) return;
+
+    setIsSelecting(true);
+    try {
+      const res = await fetch(`/api/projects/${projectId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          selectedPackageId: pkg.id,
+          packageSlug: pkg.slug,
+          packageName: pkg.name,
+          packageCollateral: collateral,
+          moduleStates: { ingestion: "completed" },
+        }),
+      });
+
+      if (res.ok) {
+        router.push(`/projects/${projectId}`);
+        router.refresh();
+      } else {
+        setIsSelecting(false);
+      }
+    } catch (error) {
+      console.error("Failed to select package:", error);
+      setIsSelecting(false);
+    }
+  }
+
   return (
-    <Link href={`/projects/${projectId}/packages/${pkg.slug}`}>
+    <div
+      role="button"
+      onClick={handleSelect}
+      className={cn(
+        "cursor-pointer group relative",
+        (isSelected || isSelecting) && "pointer-events-none"
+      )}
+    >
       <Card
         className={cn(
-          "h-full transition-colors hover:bg-accent/50",
-          isSelected && "ring-2 ring-primary"
+          "h-full transition-all duration-200",
+          "hover:border-primary/50 hover:shadow-md hover:bg-accent/5",
+          isSelected && "ring-2 ring-primary border-primary",
+          isSelecting && "opacity-70 grayscale-[0.5]"
         )}
       >
         <CardHeader className="pb-2">
           <div className="flex items-start justify-between gap-2">
-            <CardTitle className="text-base">{pkg.name}</CardTitle>
+            <CardTitle className="text-base flex items-center gap-2">
+              {pkg.name}
+              {isSelecting && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
+            </CardTitle>
             {isSelected && (
-              <Badge className="bg-green-100 text-green-700">Selected</Badge>
+              <Badge className="bg-green-100 text-green-700 hover:bg-green-100">Selected</Badge>
             )}
           </div>
         </CardHeader>
@@ -52,10 +99,10 @@ export function PackageCard({ pkg, projectId, isSelected, servicesCatalog = [] }
             {services.map((svc) => (
               <div key={svc.serviceId} className="space-y-1.5">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-zinc-900">{svc.serviceName}</span>
+                  <span className="text-sm font-medium text-zinc-900 line-clamp-1">{svc.serviceName}</span>
                   <Badge
                     variant="secondary"
-                    className={cn("text-[9px] uppercase px-1.5 py-0 h-4 border-transparent shadow-none", DESIGNATION_BADGE_STYLES[svc.designation])}
+                    className={cn("text-[9px] uppercase px-1.5 py-0 h-4 border-transparent shadow-none shrink-0", DESIGNATION_BADGE_STYLES[svc.designation])}
                   >
                     {INCLUSION_DESIGNATION_LABELS[svc.designation]}
                   </Badge>
@@ -65,36 +112,35 @@ export function PackageCard({ pkg, projectId, isSelected, servicesCatalog = [] }
                 {svc.includedOptions && svc.includedOptions.length > 0 && (
                   <ul className="pl-4 space-y-1 border-l-2 border-zinc-100/80">
                     {svc.includedOptions.map((opt) => {
-                      // Find the option name from the catalog if passed, else fallback
                       const catalogEntry = servicesCatalog?.find((s: any) => s.id === svc.serviceId || s.slug === svc.serviceSlug);
                       const optDef = catalogEntry?.serviceOptions?.find((o: any) => o.optionId === opt.optionId);
                       const optionName = optDef?.name || opt.optionId;
 
                       return (
-                        <li key={opt.optionId} className="text-xs text-zinc-600 flex items-center justify-between group">
+                        <li key={opt.optionId} className="text-xs text-zinc-600 flex items-center justify-between group/opt">
                           <span className="line-clamp-1 flex-1 pr-2">{optionName}</span>
-                          <span className="text-[9px] text-zinc-400 capitalize bg-zinc-50 px-1 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                            {opt.designation}
-                          </span>
                         </li>
                       );
                     })}
                   </ul>
                 )}
-
-                {/* Fallback if no options but we want to show there are features */}
-                {(!svc.includedOptions || svc.includedOptions.length === 0) && (svc.includedFeatures?.length > 0) && (
-                  <p className="text-[10px] text-zinc-500 pl-4">{svc.includedFeatures.length} included features</p>
-                )}
               </div>
             ))}
           </div>
 
-          <p className="text-xs text-muted-foreground pt-2 border-t mt-4">
-            {services.length} services &middot; {collateral.length} documents
-          </p>
+          <div className="pt-4 border-t flex items-center justify-between">
+            <p className="text-xs text-muted-foreground">
+              {services.length} services &middot; {collateral.length} documents
+            </p>
+            {!isSelected && !isSelecting && (
+              <div className="text-[10px] font-bold text-primary opacity-0 group-hover:opacity-100 transition-opacity uppercase tracking-wider">
+                Select Package &rarr;
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
-    </Link>
+    </div>
   );
 }
+
