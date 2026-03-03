@@ -44,7 +44,7 @@ export function EquipmentForm({
     const mgmtSizes = txExtras.managementSizes || ["Small", "Medium", "Large"];
     const environments = txExtras.environments || ["Indoor", "Outdoor"];
     const portTypes = txExtras.portTypes || ["10/100/1000", "1/2.5/5/10 Gbps", "10G SFP+", "40G QSFP"];
-    const wifiStandards = txExtras.wfiiStandard || ["Wi-Fi 5", "Wi-Fi 6", "Wi-Fi 6E", "Wi-Fi 7"];
+    const wifiStandards = txExtras.wifistandard || ["Wi-Fi 5", "Wi-Fi 6", "Wi-Fi 6E", "Wi-Fi 7"];
 
     const defaultValues: Partial<EquipmentPayload> = {
         model: initialData?.model || "",
