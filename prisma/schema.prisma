@@ -14,13 +14,6 @@ generator client {
 model GlobalTaxonomy {
   id              String   @id @default(auto()) @map("_id") @db.ObjectId
   slug            String   @unique @default("global_taxonomy_v1")
-  vendors         String[]
-  purposes        String[]
-  interfaceTypes  String[]
-  wifiStandards   String[]
-  cellularTypes   String[]
-  poeStandards    String[]
-  mountingOptions String[]
   collateralTypes String[]
   extraFields     Json?    // Stores any user-added categories not in the hardcoded columns
   createdAt       DateTime @default(now())

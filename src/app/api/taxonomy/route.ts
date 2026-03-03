@@ -2,13 +2,6 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 const KNOWN_FIELDS = [
-  "vendors",
-  "purposes",
-  "interfaceTypes",
-  "wifiStandards",
-  "cellularTypes",
-  "poeStandards",
-  "mountingOptions",
   "collateralTypes",
 ] as const;
 
@@ -32,13 +25,6 @@ export async function PUT(req: Request) {
 
     // Split form fields into known columns and extra (user-created) fields
     const knownData: Record<KnownField, string[]> = {
-      vendors: Array.isArray(body.vendors) ? body.vendors : [],
-      purposes: Array.isArray(body.purposes) ? body.purposes : [],
-      interfaceTypes: Array.isArray(body.interfaceTypes) ? body.interfaceTypes : [],
-      wifiStandards: Array.isArray(body.wifiStandards) ? body.wifiStandards : [],
-      cellularTypes: Array.isArray(body.cellularTypes) ? body.cellularTypes : [],
-      poeStandards: Array.isArray(body.poeStandards) ? body.poeStandards : [],
-      mountingOptions: Array.isArray(body.mountingOptions) ? body.mountingOptions : [],
       collateralTypes: Array.isArray(body.collateralTypes) ? body.collateralTypes : [],
     };
 

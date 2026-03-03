@@ -17,14 +17,7 @@ export default async function TaxonomyPage() {
 
     if (taxonomy) {
         const allData: Record<string, string[]> = {
-            vendors: taxonomy.vendors,
-            purposes: taxonomy.purposes,
-            interfaceTypes: taxonomy.interfaceTypes,
-            wifiStandards: taxonomy.wifiStandards,
-            cellularTypes: taxonomy.cellularTypes,
-            poeStandards: taxonomy.poeStandards,
-            mountingOptions: taxonomy.mountingOptions,
-            collateralTypes: taxonomy.collateralTypes,
+            collateralTypes: taxonomy.collateralTypes || [],
             ...(taxonomy.extraFields as Record<string, string[]> | null ?? {}),
         };
 
