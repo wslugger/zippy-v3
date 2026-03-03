@@ -62,13 +62,11 @@ export const ServiceOptionSchema = z.object({
 export type ServiceOption = z.infer<typeof ServiceOptionSchema>;
 
 // ---- Collateral ----
-export const COLLATERAL_TYPES = ["PDF", "Diagram", "Reference", "Video"] as const;
-export type CollateralType = (typeof COLLATERAL_TYPES)[number];
 
 export const CollateralSchema = z.object({
   title: z.string().min(1, "Title is required"),
   url: z.string().url("Must be a valid URL"),
-  type: z.enum(COLLATERAL_TYPES),
+  type: z.string().min(1, "Type is required"),
 });
 export type Collateral = z.infer<typeof CollateralSchema>;
 

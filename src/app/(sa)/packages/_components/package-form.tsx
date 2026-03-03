@@ -24,10 +24,10 @@ import {
 import type {
     PackageServiceInclusion,
     Collateral,
-    CollateralType,
     InclusionDesignation,
 } from "@/lib/types";
-import { COLLATERAL_TYPES, INCLUSION_DESIGNATION_LABELS } from "@/lib/types";
+import { INCLUSION_DESIGNATION_LABELS } from "@/lib/types";
+import { Prisma } from "@prisma/client";
 
 // ------- Types -------
 
@@ -41,7 +41,13 @@ interface ServiceRow {
     slug: string;
     name: string;
     shortDescription: string;
-    serviceOptions: unknown[];
+    description: string;
+    constraints: string[];
+    assumptions: string[];
+    serviceOptions: Prisma.JsonValue[];
+    isActive: boolean;
+    createdAt?: Date;
+    updatedAt?: Date;
     features: string[];
 }
 
@@ -57,11 +63,12 @@ interface PackageFormProps {
         isActive: boolean;
     };
     services: ServiceRow[];
+    collateralTypes: string[];
 }
 
 // ------- Helpers -------
 
-const COLLATERAL_ICONS: Record<CollateralType, React.ElementType> = {
+const COLLATERAL_ICONS: Record<string, React.ElementType> = {
     PDF: FileText,
     Diagram: Network,
     Reference: BookOpen,
@@ -105,7 +112,7 @@ function DesignationToggle({
     );
 }
 
-const emptyCollateral = (): Collateral => ({ title: "", url: "", type: "PDF" });
+const emptyCollateral = (collateralTypes: string[]): Collateral => ({ title: "", url: "", type: collateralTypes[0] || "PDF" });
 
 function normalizeInclusions(inclusions: any[] = [], catalog: ServiceRow[] = []): PackageServiceInclusion[] {
     return inclusions.map((s) => {
@@ -153,11 +160,13 @@ function normalizeInclusions(inclusions: any[] = [], catalog: ServiceRow[] = [])
 function CollateralRow({
     item,
     index,
+    collateralTypes,
     onChange,
     onRemove,
 }: {
     item: Collateral;
     index: number;
+    collateralTypes: string[];
     onChange: (index: number, field: keyof Collateral, value: string) => void;
     onRemove: (index: number) => void;
 }) {
@@ -198,7 +207,7 @@ function CollateralRow({
                         onChange={(e) => onChange(index, "type", e.target.value)}
                         className="h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                     >
-                        {COLLATERAL_TYPES.map((t) => (
+                        {collateralTypes.map((t) => (
                             <option key={t} value={t}>
                                 {t}
                             </option>
@@ -255,7 +264,7 @@ function ServiceInclusionRow({
     ) => void;
 }) {
     const [expanded, setExpanded] = useState(false);
-    const options = (service?.serviceOptions ?? []) as ServiceOption[];
+    const options = (service?.serviceOptions ?? []) as unknown as ServiceOption[];
     const features = service?.features ?? [];
 
     return (
@@ -434,7 +443,7 @@ function ServiceInclusionRow({
 
 // ------- Main Form -------
 
-export function PackageForm({ package: pkg, services }: PackageFormProps) {
+export function PackageForm({ package: pkg, services, collateralTypes }: PackageFormProps) {
     const router = useRouter();
     const isEdit = !!pkg;
 
@@ -463,7 +472,7 @@ export function PackageForm({ package: pkg, services }: PackageFormProps) {
     // Collateral handlers
     const addCollateral = () => {
         if (collateral.length >= 4) return;
-        setCollateral((prev) => [...prev, emptyCollateral()]);
+        setCollateral((prev) => [...prev, emptyCollateral(collateralTypes)]);
     };
 
     const updateCollateral = useCallback(
@@ -839,6 +848,7 @@ export function PackageForm({ package: pkg, services }: PackageFormProps) {
                                 key={idx}
                                 item={item}
                                 index={idx}
+                                collateralTypes={collateralTypes}
                                 onChange={updateCollateral}
                                 onRemove={removeCollateral}
                             />

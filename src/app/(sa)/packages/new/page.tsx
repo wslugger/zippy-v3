@@ -13,6 +13,9 @@ export default async function NewPackagePage() {
         orderBy: { name: "asc" },
     });
 
+    const taxonomy = await prisma.globalTaxonomy.findFirst();
+    const collateralTypes = taxonomy?.collateralTypes || ["PDF", "Diagram", "Reference", "Video"];
+
     const servicesWithFeatures = services.map((s) => ({
         ...s,
         features: allFeatures.filter((f) => f.service === s.name).map((f) => f.name),
@@ -24,7 +27,7 @@ export default async function NewPackagePage() {
                 title="New Package"
                 description="Create a new service package by defining its name, description, included services, and collateral."
             />
-            <PackageForm services={servicesWithFeatures as any} />
+            <PackageForm services={servicesWithFeatures} collateralTypes={collateralTypes} />
         </div>
     );
 }

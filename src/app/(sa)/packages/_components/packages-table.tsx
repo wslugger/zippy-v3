@@ -82,10 +82,10 @@ export function PackagesTable({ initialPackages }: PackagesTableProps) {
                             <td className="px-4 py-3 max-w-xs">
                                 <p className="truncate text-muted-foreground">{pkg.shortDescription}</p>
                             </td>
-                            <td className="px-4 py-3 text-center text-muted-foreground">
+                            <td className="px-4 py-3 text-center text-muted-foreground tabular-nums">
                                 {pkg.includedServices.length}
                             </td>
-                            <td className="px-4 py-3 text-center text-muted-foreground">
+                            <td className="px-4 py-3 text-center text-muted-foreground tabular-nums">
                                 {pkg.collateral.length} / 4
                             </td>
                             <td className="px-4 py-3 text-center">

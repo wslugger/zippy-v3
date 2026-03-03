@@ -99,10 +99,10 @@ export function PackageDetail({ pkg, projectId, isSelected }: PackageDetailProps
                 <div key={svc.serviceId} className="flex items-center justify-between">
                   <div>
                     <span className="text-sm font-medium">{svc.serviceName}</span>
-                    {svc.includedOptionIds.length > 0 && (
+                    {svc.includedOptions.length > 0 && (
                       <p className="text-xs text-muted-foreground">
-                        {svc.includedOptionIds.length} option
-                        {svc.includedOptionIds.length !== 1 ? "s" : ""} selected
+                        {svc.includedOptions.length} option
+                        {svc.includedOptions.length !== 1 ? "s" : ""} selected
                       </p>
                     )}
                   </div>

@@ -1,12 +1,12 @@
 import { FileText, Network, BookOpen, Video, ExternalLink } from "lucide-react";
 import type { Collateral } from "@/lib/types";
 
-const typeIcons = {
+const typeIcons: Record<string, React.ElementType> = {
   PDF: FileText,
   Diagram: Network,
   Reference: BookOpen,
   Video: Video,
-} as const;
+};
 
 interface CollateralListProps {
   items: Collateral[];

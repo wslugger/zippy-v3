@@ -10,12 +10,15 @@ export default async function EditPackagePage({
 }) {
     const { packageId } = await params;
 
-    const [pkg, services] = await Promise.all([
+    const [pkg, services, taxonomy] = await Promise.all([
         prisma.package.findUnique({ where: { id: packageId } }),
         prisma.service.findMany({ where: { isActive: true }, orderBy: { name: "asc" } }),
+        prisma.globalTaxonomy.findFirst(),
     ]);
 
     if (!pkg) notFound();
+
+    const collateralTypes = taxonomy?.collateralTypes || ["PDF", "Diagram", "Reference", "Video"];
 
     const allFeatures = await prisma.feature.findMany({
         where: { service: { in: services.map((s) => s.name) } },
@@ -39,7 +42,7 @@ export default async function EditPackagePage({
                 title={`Edit: ${pkg.name}`}
                 description="Update the package details, included services, and collateral."
             />
-            <PackageForm package={formatted} services={servicesWithFeatures as any} />
+            <PackageForm package={formatted} services={servicesWithFeatures} collateralTypes={collateralTypes} />
         </div>
     );
 }
