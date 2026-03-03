@@ -5,9 +5,9 @@ import { z } from "zod";
 // -----------------------------------------------------------------
 export const BaseEquipmentSchema = z.object({
     id: z.string().optional(),
-    make: z.string().min(1, "Make is required"),
-    vendorId: z.string().optional(),
     model: z.string().min(1, "Model is required"),
+    vendorId: z.string().optional(),
+    description: z.string().min(1, "Description is required"),
     family: z.string().min(1, "Family is required"),
     roles: z.array(z.string()).min(1, "At least one role is required"),
 

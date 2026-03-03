@@ -29,7 +29,7 @@ export default async function EditEquipmentPage({
     return (
         <div className="space-y-6 max-w-[1400px]">
             <PageHeader
-                title={`Edit: ${item.make} ${item.model}`}
+                title={`Edit: ${item.model}`}
                 description="Update hardware specifications and technical constraints."
             />
             <div className="max-w-5xl">

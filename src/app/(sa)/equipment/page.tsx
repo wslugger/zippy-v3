@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 
 export default async function EquipmentCatalogPage() {
     const items = await (prisma as any).equipment.findMany({
-        orderBy: [{ make: "asc" }, { model: "asc" }],
+        orderBy: [{ model: "asc" }, { description: "asc" }],
     });
 
     return (
@@ -39,8 +39,9 @@ export default async function EquipmentCatalogPage() {
                                 <div className="flex justify-between items-start">
                                     <div className="space-y-0.5">
                                         <h3 className="font-semibold text-lg leading-none group-hover:text-primary transition-colors">
-                                            {item.make} {item.model}
+                                            {item.model}
                                         </h3>
+                                        <p className="text-sm text-zinc-500 font-medium">Desc: {item.description}</p>
                                         <p className="text-sm text-zinc-500 font-medium">Family: {item.family}</p>
                                     </div>
                                     <Badge variant={item.active ? "outline" : "secondary"}>

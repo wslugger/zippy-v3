@@ -46,9 +46,9 @@ export function EquipmentForm({
     const portTypes = txExtras.portTypes || ["10/100/1000", "1/2.5/5/10 Gbps", "10G SFP+", "40G QSFP"];
 
     const defaultValues: Partial<EquipmentPayload> = {
-        make: initialData?.make || "",
-        vendorId: initialData?.vendorId || "",
         model: initialData?.model || "",
+        vendorId: initialData?.vendorId || "",
+        description: initialData?.description || "",
         family: initialData?.family || "",
         roles: initialData?.roles || (initialData?.role ? [initialData.role] : []),
         service: initialData?.service || "",
@@ -130,12 +130,12 @@ export function EquipmentForm({
                     <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <FormField
                             control={form.control}
-                            name="make"
+                            name="model"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Make</FormLabel>
+                                    <FormLabel>Model</FormLabel>
                                     <FormControl>
-                                        <Input placeholder="e.g., Cisco Meraki" {...field} />
+                                        <Input placeholder="e.g., MS120-48LP" {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -143,12 +143,12 @@ export function EquipmentForm({
                         />
                         <FormField
                             control={form.control}
-                            name="model"
+                            name="description"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Model</FormLabel>
+                                    <FormLabel>Description</FormLabel>
                                     <FormControl>
-                                        <Input placeholder="e.g., MS120-48LP" {...field} />
+                                        <Input placeholder="e.g., 48-port Gigabit PoE+ switch" {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>

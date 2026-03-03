@@ -151,9 +151,9 @@ model Feature {
 // ============================================================
 model Equipment {
   id       String  @id @default(auto()) @map("_id") @db.ObjectId
-  make     String
-  vendorId String?
-  model    String
+  model       String
+  vendorId    String?
+  description String
   family   String
   roles    String[] // Represents primary_purposes (WAN, LAN, WLAN, SECURITY, etc.)
 

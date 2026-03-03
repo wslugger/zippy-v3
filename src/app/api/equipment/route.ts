@@ -6,7 +6,7 @@ import { z } from "zod";
 export async function GET() {
     try {
         const items = await (prisma as any).equipment.findMany({
-            orderBy: [{ make: "asc" }, { model: "asc" }],
+            orderBy: [{ model: "asc" }, { description: "asc" }],
         });
         return NextResponse.json(items);
     } catch (error) {
