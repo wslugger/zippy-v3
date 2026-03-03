@@ -29,7 +29,7 @@ export default async function TaxonomyPage() {
         };
 
         initialData = Object.fromEntries(
-            Object.entries(allData).filter(([, v]) => Array.isArray(v) && v.length > 0)
+            Object.entries(allData).filter(([, v]) => Array.isArray(v))
         );
     }
 
