@@ -41,7 +41,7 @@ export default async function ProjectOverviewPage({
               <CardTitle className="text-sm font-medium">{label}</CardTitle>
             </CardHeader>
             <CardContent>
-              <ModuleStatusBadge state={moduleStates[key] as ModuleState} />
+              <ModuleStatusBadge state={(moduleStates?.[key] as ModuleState) || "not_started"} />
             </CardContent>
           </Card>
         ))}

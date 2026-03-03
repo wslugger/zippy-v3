@@ -8,7 +8,7 @@ interface ModuleStatusBadgeProps {
 }
 
 export function ModuleStatusBadge({ state }: ModuleStatusBadgeProps) {
-  const colors = MODULE_STATE_COLORS[state];
+  const colors = MODULE_STATE_COLORS[state] || MODULE_STATE_COLORS["not_started"];
   return (
     <Badge variant="secondary" className={cn(colors.bg, colors.text)}>
       {colors.label}

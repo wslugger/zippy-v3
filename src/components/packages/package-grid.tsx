@@ -11,12 +11,14 @@ interface PackageGridProps {
   }[];
   projectId: string;
   selectedPackageId: string | null;
+  servicesCatalog?: any[];
 }
 
 export function PackageGrid({
   packages,
   projectId,
   selectedPackageId,
+  servicesCatalog = [],
 }: PackageGridProps) {
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -26,6 +28,7 @@ export function PackageGrid({
           pkg={pkg}
           projectId={projectId}
           isSelected={pkg.id === selectedPackageId}
+          servicesCatalog={servicesCatalog}
         />
       ))}
     </div>

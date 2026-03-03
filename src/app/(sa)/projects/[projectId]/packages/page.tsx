@@ -13,11 +13,20 @@ export default async function PackageSelectionPage({
 }) {
   const { projectId } = await params;
 
-  const [project, packages] = await Promise.all([
+  const [project, packages, services] = await Promise.all([
     prisma.project.findUnique({ where: { id: projectId } }),
     prisma.package.findMany({
       where: { isActive: true },
       orderBy: { name: "asc" },
+    }),
+    prisma.service.findMany({
+      select: {
+        id: true,
+        slug: true,
+        name: true,
+        shortDescription: true,
+        serviceOptions: true,
+      }
     }),
   ]);
 
@@ -40,6 +49,7 @@ export default async function PackageSelectionPage({
         packages={packages}
         projectId={projectId}
         selectedPackageId={project.selectedPackageId}
+        servicesCatalog={services as any[]}
       />
     </div>
   );

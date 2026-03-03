@@ -16,6 +16,7 @@ interface PackageCardProps {
   };
   projectId: string;
   isSelected: boolean;
+  servicesCatalog?: any[];
 }
 
 const DESIGNATION_BADGE_STYLES: Record<InclusionDesignation, string> = {
@@ -24,7 +25,7 @@ const DESIGNATION_BADGE_STYLES: Record<InclusionDesignation, string> = {
   optional: "border border-dashed text-muted-foreground bg-transparent",
 };
 
-export function PackageCard({ pkg, projectId, isSelected }: PackageCardProps) {
+export function PackageCard({ pkg, projectId, isSelected, servicesCatalog = [] }: PackageCardProps) {
   const services = pkg.includedServices as PackageServiceInclusion[];
   const collateral = pkg.collateral as Collateral[];
 
@@ -44,25 +45,52 @@ export function PackageCard({ pkg, projectId, isSelected }: PackageCardProps) {
             )}
           </div>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">{pkg.shortDescription}</p>
-          <div className="flex flex-wrap gap-1">
-            {services.slice(0, 3).map((svc) => (
-              <Badge
-                key={svc.serviceId}
-                variant="secondary"
-                className={cn("text-xs", DESIGNATION_BADGE_STYLES[svc.designation])}
-              >
-                {INCLUSION_DESIGNATION_LABELS[svc.designation]}
-              </Badge>
+
+          <div className="space-y-3 pt-2">
+            {services.map((svc) => (
+              <div key={svc.serviceId} className="space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-zinc-900">{svc.serviceName}</span>
+                  <Badge
+                    variant="secondary"
+                    className={cn("text-[9px] uppercase px-1.5 py-0 h-4 border-transparent shadow-none", DESIGNATION_BADGE_STYLES[svc.designation])}
+                  >
+                    {INCLUSION_DESIGNATION_LABELS[svc.designation]}
+                  </Badge>
+                </div>
+
+                {/* Options List */}
+                {svc.includedOptions && svc.includedOptions.length > 0 && (
+                  <ul className="pl-4 space-y-1 border-l-2 border-zinc-100/80">
+                    {svc.includedOptions.map((opt) => {
+                      // Find the option name from the catalog if passed, else fallback
+                      const catalogEntry = servicesCatalog?.find((s: any) => s.id === svc.serviceId || s.slug === svc.serviceSlug);
+                      const optDef = catalogEntry?.serviceOptions?.find((o: any) => o.optionId === opt.optionId);
+                      const optionName = optDef?.name || opt.optionId;
+
+                      return (
+                        <li key={opt.optionId} className="text-xs text-zinc-600 flex items-center justify-between group">
+                          <span className="line-clamp-1 flex-1 pr-2">{optionName}</span>
+                          <span className="text-[9px] text-zinc-400 capitalize bg-zinc-50 px-1 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                            {opt.designation}
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+
+                {/* Fallback if no options but we want to show there are features */}
+                {(!svc.includedOptions || svc.includedOptions.length === 0) && (svc.includedFeatures?.length > 0) && (
+                  <p className="text-[10px] text-zinc-500 pl-4">{svc.includedFeatures.length} included features</p>
+                )}
+              </div>
             ))}
-            {services.length > 3 && (
-              <Badge variant="secondary" className="text-xs">
-                +{services.length - 3} more
-              </Badge>
-            )}
           </div>
-          <p className="text-xs text-muted-foreground">
+
+          <p className="text-xs text-muted-foreground pt-2 border-t mt-4">
             {services.length} services &middot; {collateral.length} documents
           </p>
         </CardContent>
