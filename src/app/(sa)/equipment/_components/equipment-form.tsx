@@ -39,14 +39,16 @@ export function EquipmentForm({
 
     // Safely extract taxonomy defaults or empty arrays
     const txExtras = taxonomy?.extraFields || {};
-    const roles = txExtras.equipmentRoles || ["WAN", "LAN", "WLAN", "SECURITY"];
-    const statuses = txExtras.equipmentStatus || ["Available", "EOS", "EOL"];
-    const mgmtSizes = txExtras.managementSizes || ["Small", "Medium", "Large"];
-    const environments = txExtras.environments || ["Indoor", "Outdoor"];
-    const portTypes = txExtras.portTypes || ["10/100/1000", "1/2.5/5/10 Gbps", "10G SFP+", "40G QSFP"];
-    const wifiStandards = txExtras.wifistandard || ["Wi-Fi 5", "Wi-Fi 6", "Wi-Fi 6E", "Wi-Fi 7"];
-    const mimoDensities = txExtras.mimoDensity || ["1x1:1", "2x2:2", "4x4:4", "8x8:8"];
-    const mountingOptions = txExtras.mountingOptions || ["Ceiling", "Wall", "Desktop", "Outdoor Pole"];
+    const roles = txExtras.equipmentRoles || [];
+    const statuses = txExtras.equipmentStatus || [];
+    const mgmtSizes = txExtras.managementSizes || [];
+    const environments = txExtras.environments || [];
+    const portTypes = txExtras.portTypes || [];
+    const wifiStandards = txExtras.wifistandard || [];
+    const mimoDensities = txExtras.mimoDensity || [];
+    const mountingOptions = txExtras.mountingOptions || [];
+    const cellularTypes = txExtras.cellularTypes || [];
+    const cellularIntegrations = txExtras.cellularIntegrations || [];
 
     const defaultValues: Partial<EquipmentPayload> = {
         model: initialData?.model || "",
@@ -58,6 +60,7 @@ export function EquipmentForm({
         serviceOption: initialData?.serviceOption || "",
         status: initialData?.status || statuses[0],
         eosDate: initialData?.eosDate ? new Date(initialData.eosDate).toISOString() : "",
+        datasheetUrl: initialData?.datasheetUrl || "",
         pricing: {
             purchasePrice: initialData?.pricing?.purchasePrice || 0,
             rentalPrice: initialData?.pricing?.rentalPrice || 0,
@@ -247,6 +250,19 @@ export function EquipmentForm({
                                     <FormLabel>Vendor SKU / ID (Optional)</FormLabel>
                                     <FormControl>
                                         <Input placeholder="Internal or vendor identifier" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="datasheetUrl"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Datasheet URL (Optional)</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="https://example.com/datasheet.pdf" {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -529,6 +545,53 @@ export function EquipmentForm({
                                                             </FormControl>
                                                             <SelectContent>
                                                                 {portTypes.map((pt: string) => <SelectItem key={pt} value={pt}>{pt}</SelectItem>)}
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </FormItem>
+                                                )}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Cellular Connectivity */}
+                                    <div className="border-t border-zinc-100 pt-4 mt-2">
+                                        <p className="text-xs font-semibold text-zinc-500 mb-3 uppercase tracking-wider">Cellular Connectivity</p>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <FormField
+                                                control={form.control}
+                                                name="specs.cellularType"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel className="uppercase font-semibold text-xs tracking-wider">Cellular Type</FormLabel>
+                                                        <p className="text-[0.8rem] text-muted-foreground mt-1 mb-2 leading-relaxed">
+                                                            <span className="font-semibold text-zinc-700">Guidance:</span> The cellular standard supported (e.g. 5G Sub-6, LTE Cat 18). Select &quot;None&quot; if no cellular WAN.
+                                                        </p>
+                                                        <Select onValueChange={field.onChange} value={(field.value as string) || ""}>
+                                                            <FormControl>
+                                                                <SelectTrigger><SelectValue placeholder="Select cellular type" /></SelectTrigger>
+                                                            </FormControl>
+                                                            <SelectContent>
+                                                                {cellularTypes.map((ct: string) => <SelectItem key={ct} value={ct}>{ct}</SelectItem>)}
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </FormItem>
+                                                )}
+                                            />
+                                            <FormField
+                                                control={form.control}
+                                                name="specs.cellularIntegration"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel className="uppercase font-semibold text-xs tracking-wider">Cellular Integration</FormLabel>
+                                                        <p className="text-[0.8rem] text-muted-foreground mt-1 mb-2 leading-relaxed">
+                                                            <span className="font-semibold text-zinc-700">Guidance:</span> How cellular is provided — built-in modem (&quot;Integrated&quot;), via a PIM/NIM module slot, USB dongle, or external gateway.
+                                                        </p>
+                                                        <Select onValueChange={field.onChange} value={(field.value as string) || ""}>
+                                                            <FormControl>
+                                                                <SelectTrigger><SelectValue placeholder="Select integration method" /></SelectTrigger>
+                                                            </FormControl>
+                                                            <SelectContent>
+                                                                {cellularIntegrations.map((ci: string) => <SelectItem key={ci} value={ci}>{ci}</SelectItem>)}
                                                             </SelectContent>
                                                         </Select>
                                                     </FormItem>

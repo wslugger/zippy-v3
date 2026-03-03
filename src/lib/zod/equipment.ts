@@ -17,6 +17,7 @@ export const BaseEquipmentSchema = z.object({
 
     status: z.string().min(1, "Status is required"), // Managed via Taxonomy
     eosDate: z.string().datetime().nullable().optional(),
+    datasheetUrl: z.string().url("Invalid URL format").optional().or(z.literal("")),
 });
 
 // -----------------------------------------------------------------
@@ -41,6 +42,8 @@ export const WANSpecsSchema = z.object({
     wanPortType: z.string().optional(),
     lanPortCount: z.number().optional(),
     lanPortType: z.string().optional(),
+    cellularType: z.string().optional(),           // e.g. "5G Sub-6", "5G mmWave", "LTE Cat 18", "LTE Cat 6", "None"
+    cellularIntegration: z.string().optional(),     // e.g. "Integrated", "PIM Module", "USB Dongle", "External Gateway", "None"
 });
 
 // B) LAN Specs

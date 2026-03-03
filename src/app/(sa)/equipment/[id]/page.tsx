@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { EquipmentForm } from "../_components/equipment-form";
 import { PageHeader } from "@/components/layout/page-header";
+import { DeleteEquipmentButton } from "../_components/delete-equipment-button";
 import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -33,7 +34,15 @@ export default async function EditEquipmentPage({
             <PageHeader
                 title={`Edit: ${item.model}`}
                 description="Update hardware specifications and technical constraints."
-            />
+            >
+                <DeleteEquipmentButton
+                    equipmentId={p.id}
+                    model={item.model}
+                    variant="destructive"
+                    size="default"
+                    redirectToCatalog
+                />
+            </PageHeader>
             <div className="max-w-5xl">
                 <EquipmentForm initialData={item} taxonomy={taxonomy} services={services as any} />
             </div>

@@ -156,6 +156,7 @@ model Equipment {
   description String
   family   String
   roles    String[] // Represents primary_purposes (WAN, LAN, WLAN, SECURITY, etc.)
+  datasheetUrl String?
 
   // Service Catalog Mapping
   service       String // E.g., "Managed LAN"
