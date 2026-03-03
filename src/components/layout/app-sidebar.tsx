@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FolderOpen, Package, Wrench, Star, Globe, Zap } from "lucide-react";
+import { FolderOpen, Package, Wrench, Star, Globe, Zap, SlidersHorizontal } from "lucide-react";
 
 export function AppSidebar() {
   return (
@@ -51,7 +51,19 @@ export function AppSidebar() {
           <Globe className="h-4 w-4" />
           Taxonomy
         </Link>
+
+        <p className="mb-1 mt-4 px-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+          Settings
+        </p>
+        <Link
+          href="/settings/prompts"
+          className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-foreground hover:bg-accent"
+        >
+          <SlidersHorizontal className="h-4 w-4" />
+          AI Prompts
+        </Link>
       </nav>
     </aside>
   );
 }
+

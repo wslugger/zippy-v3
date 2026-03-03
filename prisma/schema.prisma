@@ -5,7 +5,6 @@ datasource db {
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
 }
 
 // ============================================================
@@ -77,6 +76,9 @@ model Project {
   packageReasoning  String?
   packageCollateral Json[]
 
+  // AI recommendation result (Module 1 assist)
+  aiRecommendation  Json?    // { packageId, confidence, reasoning }
+
   // Module 2 output (stub)
   customizations    Json?
 
@@ -90,6 +92,39 @@ model Project {
   updatedAt         DateTime @updatedAt
 
   @@map("projects")
+}
+
+// ============================================================
+// AI PROMPT CATALOG
+// Editable prompts per SA workflow step
+// ============================================================
+model AIPrompt {
+  id                 String   @id @default(auto()) @map("_id") @db.ObjectId
+  slug               String   @unique          // e.g. "package_selection"
+  displayName        String                    // "Package Selection"
+  model              String   @default("gemini-3-flash-preview")
+  temperature        Float    @default(0.1)
+  systemInstruction  String
+  userPromptTemplate String
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@map("ai_prompts")
+}
+
+// ============================================================
+// CUSTOMER REQUIREMENTS
+// Persisted extracted text from uploads or chat (for future phases)
+// ============================================================
+model CustomerRequirement {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  projectId String   @db.ObjectId
+  source    String                    // "upload" | "chat"
+  fileName  String?                   // original filename if uploaded
+  rawText   String                    // extracted text content
+  createdAt DateTime @default(now())
+
+  @@map("customer_requirements")
 }
 
 // ============================================================

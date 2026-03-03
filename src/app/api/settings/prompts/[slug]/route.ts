@@ -1,0 +1,57 @@
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { AIPromptSchema } from "@/lib/types";
+
+/** GET /api/settings/prompts/[slug] — fetch single prompt */
+export async function GET(
+    _req: Request,
+    { params }: { params: Promise<{ slug: string }> }
+) {
+    try {
+        const { slug } = await params;
+        const prompt = await prisma.aIPrompt.findUnique({ where: { slug } });
+        if (!prompt) return NextResponse.json({ error: "Not found" }, { status: 404 });
+        return NextResponse.json(prompt);
+    } catch (err) {
+        console.error("GET /api/settings/prompts/[slug] error:", err);
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    }
+}
+
+/** PUT /api/settings/prompts/[slug] — update a prompt */
+export async function PUT(
+    req: Request,
+    { params }: { params: Promise<{ slug: string }> }
+) {
+    try {
+        const { slug } = await params;
+        const body = await req.json();
+        const parsed = AIPromptSchema.partial().safeParse(body);
+        if (!parsed.success) {
+            return NextResponse.json(
+                { error: "Validation failed", details: parsed.error.flatten() },
+                { status: 400 }
+            );
+        }
+        const prompt = await prisma.aIPrompt.update({ where: { slug }, data: parsed.data });
+        return NextResponse.json(prompt);
+    } catch (err) {
+        console.error("PUT /api/settings/prompts/[slug] error:", err);
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    }
+}
+
+/** DELETE /api/settings/prompts/[slug] — delete a prompt */
+export async function DELETE(
+    _req: Request,
+    { params }: { params: Promise<{ slug: string }> }
+) {
+    try {
+        const { slug } = await params;
+        await prisma.aIPrompt.delete({ where: { slug } });
+        return new NextResponse(null, { status: 204 });
+    } catch (err) {
+        console.error("DELETE /api/settings/prompts/[slug] error:", err);
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    }
+}

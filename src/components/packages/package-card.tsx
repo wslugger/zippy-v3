@@ -20,6 +20,8 @@ interface PackageCardProps {
   };
   projectId: string;
   isSelected: boolean;
+  isRecommended?: boolean;
+  recommendationConfidence?: number;
   servicesCatalog?: any[];
 }
 
@@ -29,7 +31,7 @@ const DESIGNATION_BADGE_STYLES: Record<InclusionDesignation, string> = {
   optional: "border border-dashed text-muted-foreground bg-transparent",
 };
 
-export function PackageCard({ pkg, projectId, isSelected, servicesCatalog = [] }: PackageCardProps) {
+export function PackageCard({ pkg, projectId, isSelected, isRecommended = false, recommendationConfidence, servicesCatalog = [] }: PackageCardProps) {
   const router = useRouter();
   const [isSelecting, setIsSelecting] = useState(false);
   const services = pkg.includedServices as PackageServiceInclusion[];
@@ -78,6 +80,7 @@ export function PackageCard({ pkg, projectId, isSelected, servicesCatalog = [] }
           "h-full transition-all duration-200",
           "hover:border-primary/50 hover:shadow-md hover:bg-accent/5",
           isSelected && "ring-2 ring-primary border-primary",
+          isRecommended && !isSelected && "ring-2 ring-amber-400 border-amber-400 bg-amber-50/30",
           isSelecting && "opacity-70 grayscale-[0.5]"
         )}
       >
@@ -87,9 +90,16 @@ export function PackageCard({ pkg, projectId, isSelected, servicesCatalog = [] }
               {pkg.name}
               {isSelecting && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
             </CardTitle>
-            {isSelected && (
-              <Badge className="bg-green-100 text-green-700 hover:bg-green-100">Selected</Badge>
-            )}
+            <div className="flex flex-col items-end gap-1 shrink-0">
+              {isSelected && (
+                <Badge className="bg-green-100 text-green-700 hover:bg-green-100">Selected</Badge>
+              )}
+              {isRecommended && (
+                <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100 gap-1">
+                  ⚡ AI Match {recommendationConfidence != null ? `${recommendationConfidence}%` : ""}
+                </Badge>
+              )}
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">

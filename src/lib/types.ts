@@ -155,6 +155,23 @@ export const CreateProjectSchema = z.object({
 });
 export type CreateProjectInput = z.infer<typeof CreateProjectSchema>;
 
+export const AIPromptSchema = z.object({
+  slug: z.string().min(1),
+  displayName: z.string().min(1),
+  model: z.string().min(1),
+  temperature: z.number().min(0).max(1),
+  systemInstruction: z.string(),
+  userPromptTemplate: z.string(),
+});
+export type AIPrompt = z.infer<typeof AIPromptSchema>;
+
+export const AIRecommendationSchema = z.object({
+  packageId: z.string(),
+  confidence: z.number().min(0).max(100),
+  reasoning: z.string(),
+});
+export type AIRecommendation = z.infer<typeof AIRecommendationSchema>;
+
 export const UpdateProjectSchema = z.object({
   customerName: z.string().min(1).max(200).optional(),
   description: z.string().max(1000).optional(),
@@ -164,5 +181,6 @@ export const UpdateProjectSchema = z.object({
   packageReasoning: z.string().optional(),
   packageCollateral: z.array(CollateralSchema).optional(),
   moduleStates: ModuleStatesSchema.partial().optional(),
+  aiRecommendation: AIRecommendationSchema.optional(),
 });
 export type UpdateProjectInput = z.infer<typeof UpdateProjectSchema>;
