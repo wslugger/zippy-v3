@@ -8,16 +8,16 @@ export async function GET() {
     try {
         const services = await db.service.findMany({
             where: { isActive: true },
-            select: { serviceOptions: true },
+            select: { name: true, serviceOptions: true },
         });
 
         const vendors = new Set<string>();
 
         for (const service of services) {
             for (const option of (service.serviceOptions as Array<Record<string, unknown>>)) {
-                const vendor = option?.vendor;
-                if (typeof vendor === "string" && vendor.trim()) {
-                    vendors.add(vendor.trim());
+                const optionName = option?.name;
+                if (typeof optionName === "string" && optionName.trim()) {
+                    vendors.add(`${service.name} > ${optionName.trim()}`);
                 }
             }
         }
