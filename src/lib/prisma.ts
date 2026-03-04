@@ -1,3 +1,4 @@
+// Forced reload to pick up schema changes
 import { PrismaClient } from "@prisma/client";
 
 const globalForPrisma = globalThis as unknown as {
