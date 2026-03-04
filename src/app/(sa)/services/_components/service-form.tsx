@@ -218,7 +218,7 @@ export function ServiceForm({ initialData, serviceId }: ServiceFormProps) {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.error || "Failed to save service");
+                throw new Error(errorData.details || errorData.error || "Failed to save service");
             }
 
             toast.success(serviceId ? "Service updated" : "Service created");
@@ -276,7 +276,7 @@ export function ServiceForm({ initialData, serviceId }: ServiceFormProps) {
                                         />
                                     </FormControl>
                                     <FormLabel className="text-sm font-medium cursor-pointer">
-                                        {field.value ? "Licensable / Hardware" : "Software / Cloud"}
+                                        Licensable
                                     </FormLabel>
                                 </FormItem>
                             )}
