@@ -77,6 +77,10 @@ export function LicenseForm({ initialData, onSuccess, onCancel }: LicenseFormPro
         },
     });
 
+    // Watch array fields at component level so checkbox UI re-renders reliably
+    const watchedHw: string[] = form.watch("supportedHardware") ?? [];
+    const watchedPkgs: string[] = form.watch("supportedPackages") ?? [];
+
     // Load lookup data — guard against non-array responses in case of API errors
     useEffect(() => {
         const safeArray = <T,>(val: unknown): T[] => (Array.isArray(val) ? (val as T[]) : []);
@@ -232,201 +236,169 @@ export function LicenseForm({ initialData, onSuccess, onCancel }: LicenseFormPro
                 <div className="px-6 py-5 space-y-4 bg-zinc-50/60">
 
                     {/* Supported Hardware combobox */}
-                    <FormField
-                        control={form.control}
-                        name="supportedHardware"
-                        render={({ field }) => {
-                            const currentHw = field.value || [];
-                            return (
-                                <FormItem>
-                                    <SectionLabel icon={Cpu}>Supported Hardware SKUs</SectionLabel>
-                                    <Popover open={hwOpen} onOpenChange={setHwOpen}>
-                                        <PopoverTrigger asChild>
-                                            <Button
-                                                type="button"
-                                                variant="outline"
-                                                role="combobox"
-                                                className={cn(
-                                                    "w-full h-9 justify-between font-normal bg-white",
-                                                    currentHw.length > 0 && "border-violet-300 text-violet-700"
-                                                )}
-                                            >
-                                                <span className="text-sm">
-                                                    {currentHw.length > 0
-                                                        ? `${currentHw.length} hardware SKU${currentHw.length > 1 ? "s" : ""} selected`
-                                                        : <span className="text-zinc-400">Search by SKU or model…</span>}
-                                                </span>
-                                                <ChevronsUpDown className="ml-2 h-3.5 w-3.5 shrink-0 text-zinc-400" />
-                                            </Button>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-[420px] p-0" align="start">
-                                            <Command>
-                                                <CommandInput placeholder="Filter by SKU or model name…" className="h-9" />
-                                                <CommandList>
-                                                    <CommandEmpty className="py-6 text-center text-sm text-zinc-400">
-                                                        No equipment in catalog yet.
-                                                    </CommandEmpty>
-                                                    <CommandGroup>
-                                                        {equipmentOptions.map((eq) => {
-                                                            const isSelected = currentHw.includes(eq.sku);
-                                                            return (
-                                                                <CommandItem
-                                                                    key={`${eq.sku}-${isSelected}`}
-                                                                    value={`${eq.sku} ${eq.name}`}
-                                                                    onSelect={() => {
-                                                                        field.onChange(
-                                                                            currentHw.includes(eq.sku)
-                                                                                ? currentHw.filter((s: string) => s !== eq.sku)
-                                                                                : [...currentHw, eq.sku]
-                                                                        );
-                                                                    }}
-                                                                    className="flex items-center gap-2 py-2"
-                                                                >
-                                                                    <div className={cn(
-                                                                        "flex h-4 w-4 items-center justify-center rounded border",
-                                                                        isSelected
-                                                                            ? "bg-violet-600 border-violet-600"
-                                                                            : "border-zinc-300 bg-white"
-                                                                    )}>
-                                                                        {isSelected && (
-                                                                            <Check className="h-3 w-3 text-white" />
-                                                                        )}
-                                                                    </div>
-                                                                    <span className="font-mono text-[11px] bg-zinc-100 px-1.5 py-0.5 rounded text-zinc-600">{eq.sku}</span>
-                                                                    <span className="text-sm text-zinc-700">{eq.name}</span>
-                                                                </CommandItem>
-                                                            );
-                                                        })}
-                                                    </CommandGroup>
-                                                </CommandList>
-                                            </Command>
-                                        </PopoverContent>
-                                    </Popover>
-                                    {currentHw.length > 0 && (
-                                        <div className="flex flex-wrap gap-1.5 mt-2">
-                                            {currentHw.map((sku: string) => (
-                                                <Badge
-                                                    key={sku}
-                                                    variant="outline"
-                                                    className="gap-1 font-mono text-[11px] border-violet-200 bg-violet-50 text-violet-700 pr-1"
-                                                >
-                                                    {sku}
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => field.onChange(currentHw.filter((s: string) => s !== sku))}
-                                                        className="ml-0.5 rounded-full hover:bg-violet-100 p-0.5"
-                                                    >
-                                                        <X className="h-2.5 w-2.5" />
-                                                    </button>
-                                                </Badge>
-                                            ))}
-                                        </div>
+                    <FormItem>
+                        <SectionLabel icon={Cpu}>Supported Hardware SKUs</SectionLabel>
+                        <Popover open={hwOpen} onOpenChange={setHwOpen}>
+                            <PopoverTrigger asChild>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    role="combobox"
+                                    className={cn(
+                                        "w-full h-9 justify-between font-normal bg-white",
+                                        watchedHw.length > 0 && "border-violet-300 text-violet-700"
                                     )}
-                                    <FormMessage />
-                                </FormItem>
-                            );
-                        }}
-                    />
-
-                    {/* Supported Packages combobox */}
-                    <FormField
-                        control={form.control}
-                        name="supportedPackages"
-                        render={({ field }) => {
-                            const currentPkgs = field.value || [];
-                            return (
-                                <FormItem>
-                                    <SectionLabel icon={Package}>Supported Packages</SectionLabel>
-                                    <Popover open={pkgOpen} onOpenChange={setPkgOpen}>
-                                        <PopoverTrigger asChild>
-                                            <Button
-                                                type="button"
-                                                variant="outline"
-                                                role="combobox"
-                                                className={cn(
-                                                    "w-full h-9 justify-between font-normal bg-white",
-                                                    currentPkgs.length > 0 && "border-sky-300 text-sky-700"
-                                                )}
-                                            >
-                                                <span className="text-sm">
-                                                    {currentPkgs.length > 0
-                                                        ? `${currentPkgs.length} package${currentPkgs.length > 1 ? "s" : ""} selected`
-                                                        : <span className="text-zinc-400">Search packages…</span>}
-                                                </span>
-                                                <ChevronsUpDown className="ml-2 h-3.5 w-3.5 shrink-0 text-zinc-400" />
-                                            </Button>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-[420px] p-0" align="start">
-                                            <Command>
-                                                <CommandInput placeholder="Filter by package name or slug…" className="h-9" />
-                                                <CommandList>
-                                                    <CommandEmpty className="py-6 text-center text-sm text-zinc-400">
-                                                        No packages in catalog yet.
-                                                    </CommandEmpty>
-                                                    <CommandGroup>
-                                                        {packageOptions.map((pkg) => {
-                                                            const isSelected = currentPkgs.includes(pkg.slug);
-                                                            return (
-                                                                <CommandItem
-                                                                    key={`${pkg.slug}-${isSelected}`}
-                                                                    value={`${pkg.slug} ${pkg.name}`}
-                                                                    onSelect={() => {
-                                                                        field.onChange(
-                                                                            currentPkgs.includes(pkg.slug)
-                                                                                ? currentPkgs.filter((s: string) => s !== pkg.slug)
-                                                                                : [...currentPkgs, pkg.slug]
-                                                                        );
-                                                                    }}
-                                                                    className="flex items-center gap-2 py-2"
-                                                                >
-                                                                    <div className={cn(
-                                                                        "flex h-4 w-4 items-center justify-center rounded border",
-                                                                        isSelected
-                                                                            ? "bg-sky-600 border-sky-600"
-                                                                            : "border-zinc-300 bg-white"
-                                                                    )}>
-                                                                        {isSelected && (
-                                                                            <Check className="h-3 w-3 text-white" />
-                                                                        )}
-                                                                    </div>
-                                                                    <span className="text-sm text-zinc-700">{pkg.name}</span>
-                                                                    <span className="ml-auto font-mono text-[10px] text-zinc-400">{pkg.slug}</span>
-                                                                </CommandItem>
-                                                            );
-                                                        })}
-                                                    </CommandGroup>
-                                                </CommandList>
-                                            </Command>
-                                        </PopoverContent>
-                                    </Popover>
-                                    {currentPkgs.length > 0 && (
-                                        <div className="flex flex-wrap gap-1.5 mt-2">
-                                            {currentPkgs.map((slug: string) => {
-                                                const pkg = packageOptions.find((p) => p.slug === slug);
+                                >
+                                    <span className="text-sm">
+                                        {watchedHw.length > 0
+                                            ? `${watchedHw.length} hardware SKU${watchedHw.length > 1 ? "s" : ""} selected`
+                                            : <span className="text-zinc-400">Search by SKU or model…</span>}
+                                    </span>
+                                    <ChevronsUpDown className="ml-2 h-3.5 w-3.5 shrink-0 text-zinc-400" />
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[420px] p-0" align="start">
+                                <Command>
+                                    <CommandInput placeholder="Filter by SKU or model name…" className="h-9" />
+                                    <CommandList>
+                                        <CommandEmpty className="py-6 text-center text-sm text-zinc-400">
+                                            No equipment in catalog yet.
+                                        </CommandEmpty>
+                                        <CommandGroup>
+                                            {equipmentOptions.map((eq) => {
+                                                const isSelected = watchedHw.includes(eq.sku);
                                                 return (
-                                                    <Badge
-                                                        key={slug}
-                                                        variant="outline"
-                                                        className="gap-1 text-[11px] border-sky-200 bg-sky-50 text-sky-700 pr-1"
+                                                    <CommandItem
+                                                        key={eq.sku}
+                                                        value={`${eq.sku} ${eq.name}`}
+                                                        onSelect={() => {
+                                                            const next = watchedHw.includes(eq.sku)
+                                                                ? watchedHw.filter((s: string) => s !== eq.sku)
+                                                                : [...watchedHw, eq.sku];
+                                                            form.setValue("supportedHardware", next, { shouldDirty: true });
+                                                        }}
+                                                        className={cn(
+                                                            "flex items-center gap-2 py-2",
+                                                            isSelected && "bg-violet-50"
+                                                        )}
                                                     >
-                                                        {pkg?.name ?? slug}
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => field.onChange(currentPkgs.filter((s: string) => s !== slug))}
-                                                            className="ml-0.5 rounded-full hover:bg-sky-100 p-0.5"
-                                                        >
-                                                            <X className="h-2.5 w-2.5" />
-                                                        </button>
-                                                    </Badge>
+                                                        <span className="font-mono text-[11px] bg-zinc-100 px-1.5 py-0.5 rounded text-zinc-600">{eq.sku}</span>
+                                                        <span className={cn("text-sm", isSelected ? "text-violet-700 font-medium" : "text-zinc-700")}>{eq.name}</span>
+                                                        {isSelected && <Check className="ml-auto h-4 w-4 text-violet-600" />}
+                                                    </CommandItem>
                                                 );
                                             })}
-                                        </div>
+                                        </CommandGroup>
+                                    </CommandList>
+                                </Command>
+                            </PopoverContent>
+                        </Popover>
+                        {watchedHw.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5 mt-2">
+                                {watchedHw.map((sku: string) => (
+                                    <Badge
+                                        key={sku}
+                                        variant="outline"
+                                        className="gap-1 font-mono text-[11px] border-violet-200 bg-violet-50 text-violet-700 pr-1"
+                                    >
+                                        {sku}
+                                        <button
+                                            type="button"
+                                            onClick={() => form.setValue("supportedHardware", watchedHw.filter((s: string) => s !== sku), { shouldDirty: true })}
+                                            className="ml-0.5 rounded-full hover:bg-violet-100 p-0.5"
+                                        >
+                                            <X className="h-2.5 w-2.5" />
+                                        </button>
+                                    </Badge>
+                                ))}
+                            </div>
+                        )}
+                        <FormMessage />
+                    </FormItem>
+
+                    {/* Supported Packages combobox */}
+                    <FormItem>
+                        <SectionLabel icon={Package}>Supported Packages</SectionLabel>
+                        <Popover open={pkgOpen} onOpenChange={setPkgOpen}>
+                            <PopoverTrigger asChild>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    role="combobox"
+                                    className={cn(
+                                        "w-full h-9 justify-between font-normal bg-white",
+                                        watchedPkgs.length > 0 && "border-sky-300 text-sky-700"
                                     )}
-                                    <FormMessage />
-                                </FormItem>
-                            );
-                        }}
-                    />
+                                >
+                                    <span className="text-sm">
+                                        {watchedPkgs.length > 0
+                                            ? `${watchedPkgs.length} package${watchedPkgs.length > 1 ? "s" : ""} selected`
+                                            : <span className="text-zinc-400">Search packages…</span>}
+                                    </span>
+                                    <ChevronsUpDown className="ml-2 h-3.5 w-3.5 shrink-0 text-zinc-400" />
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[420px] p-0" align="start">
+                                <Command>
+                                    <CommandInput placeholder="Filter by package name or slug…" className="h-9" />
+                                    <CommandList>
+                                        <CommandEmpty className="py-6 text-center text-sm text-zinc-400">
+                                            No packages in catalog yet.
+                                        </CommandEmpty>
+                                        <CommandGroup>
+                                            {packageOptions.map((pkg) => {
+                                                const isSelected = watchedPkgs.includes(pkg.slug);
+                                                return (
+                                                    <CommandItem
+                                                        key={pkg.slug}
+                                                        value={`${pkg.slug} ${pkg.name}`}
+                                                        onSelect={() => {
+                                                            const next = watchedPkgs.includes(pkg.slug)
+                                                                ? watchedPkgs.filter((s: string) => s !== pkg.slug)
+                                                                : [...watchedPkgs, pkg.slug];
+                                                            form.setValue("supportedPackages", next, { shouldDirty: true });
+                                                        }}
+                                                        className={cn(
+                                                            "flex items-center gap-2 py-2",
+                                                            isSelected && "bg-sky-50"
+                                                        )}
+                                                    >
+                                                        <span className={cn("text-sm", isSelected ? "text-sky-700 font-medium" : "text-zinc-700")}>{pkg.name}</span>
+                                                        <span className="ml-auto font-mono text-[10px] text-zinc-400">{pkg.slug}</span>
+                                                        {isSelected && <Check className="h-4 w-4 text-sky-600 shrink-0" />}
+                                                    </CommandItem>
+                                                );
+                                            })}
+                                        </CommandGroup>
+                                    </CommandList>
+                                </Command>
+                            </PopoverContent>
+                        </Popover>
+                        {watchedPkgs.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5 mt-2">
+                                {watchedPkgs.map((slug: string) => {
+                                    const pkg = packageOptions.find((p) => p.slug === slug);
+                                    return (
+                                        <Badge
+                                            key={slug}
+                                            variant="outline"
+                                            className="gap-1 text-[11px] border-sky-200 bg-sky-50 text-sky-700 pr-1"
+                                        >
+                                            {pkg?.name ?? slug}
+                                            <button
+                                                type="button"
+                                                onClick={() => form.setValue("supportedPackages", watchedPkgs.filter((s: string) => s !== slug), { shouldDirty: true })}
+                                                className="ml-0.5 rounded-full hover:bg-sky-100 p-0.5"
+                                            >
+                                                <X className="h-2.5 w-2.5" />
+                                            </button>
+                                        </Badge>
+                                    );
+                                })}
+                            </div>
+                        )}
+                        <FormMessage />
+                    </FormItem>
                 </div>
 
                 {/* ── Divider ───────────────────────────────── */}
