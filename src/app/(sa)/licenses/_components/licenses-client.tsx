@@ -11,6 +11,7 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
+    DialogDescription,
 } from "@/components/ui/dialog";
 import {
     Table,
@@ -128,9 +129,21 @@ export default function LicensesClientPage({ initialLicenses }: { initialLicense
             )}
 
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                <DialogContent className="max-w-xl">
-                    <DialogHeader>
-                        <DialogTitle>{editing ? "Edit License" : "New License"}</DialogTitle>
+                <DialogContent className="max-w-[560px] p-0 gap-0 overflow-hidden">
+                    <DialogHeader className="px-6 pt-5 pb-4 border-b border-zinc-100">
+                        <div className="flex items-center gap-2.5">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-900">
+                                <KeyRound className="h-4 w-4 text-white" />
+                            </div>
+                            <div>
+                                <DialogTitle className="text-base leading-tight">
+                                    {editing ? "Edit License" : "New License"}
+                                </DialogTitle>
+                                <DialogDescription className="text-xs text-zinc-400 mt-0.5">
+                                    {editing ? `Editing ${editing.sku}` : "Add a new software license to the catalog"}
+                                </DialogDescription>
+                            </div>
+                        </div>
                     </DialogHeader>
                     <LicenseForm
                         initialData={editing ? (editing as unknown as Record<string, unknown>) : undefined}
