@@ -3,6 +3,9 @@ import { prisma } from "@/lib/prisma";
 import { extractText } from "@/lib/doc-extract";
 import { callGemini } from "@/lib/gemini";
 
+// Allow up to 5 minutes for this route (datasheet processing is slow)
+export const maxDuration = 300;
+
 // Default prompt used when no DB entry exists for this slug
 const DEFAULT_SYSTEM = `You are an expert network equipment analyst. Your job is to read vendor datasheets and extract structured equipment catalog data.
 
@@ -32,12 +35,8 @@ For EACH model found, return a JSON object with these fields:
       "serviceOption": "string — best matching service option name from AVAILABLE_SERVICES, or null",
       "status": "Available",
       "vendorId": "string — vendor SKU if found, or null",
-      "pricing": {
-        "purchasePrice": 0,
-        "rentalPrice": 0,
-        "managementSize": "Small"
-      },
       "specs": {
+        "managementLevel": "string or null — Use 'Small', 'Medium', 'Large', 'Enterprise', or 'X-Large' based on targeted network size/branch size.",
         "rawFirewallThroughputMbps": "number or null (WAN only) — Use the highest 'Forwarding (512B)' or 'Stateful Firewall' throughput from performance tables. Convert Gbps to Mbps (e.g. 1.9 Gbps = 1900).",
         "sdwanCryptoThroughputMbps": "number or null (WAN only) — Use 'IPsec (512B)', 'VPN throughput', 'IPsec IMIX', or 'SD-WAN Routing' values. Convert Gbps to Mbps.",
         "advancedSecurityThroughputMbps": "number or null (WAN only) — Use 'SD-WAN*', 'Threat protection', 'IDS/IPS', 'UTM', or 'Advanced Security' throughput values. Convert Gbps to Mbps.",
@@ -181,7 +180,7 @@ export async function POST(req: Request) {
             where: { slug: "equipment_datasheet_ingest" },
         });
 
-        const model = promptConfig?.model ?? "gemini-3.1-pro-preview";
+        const model = promptConfig?.model ?? "gemini-2.5-flash";
         const temperature = promptConfig?.temperature ?? 0.1;
         const systemInstruction =
             promptConfig?.systemInstruction ?? DEFAULT_SYSTEM;
@@ -190,30 +189,54 @@ export async function POST(req: Request) {
 
         const DEFAULT_SYSTEM_URL_AWARE = `${systemInstruction}\n- Set "datasheetUrl" to the provided [Source URL] if only one URL was provided, or if the model can be clearly attributed to that source.`;
 
+        // Cap datasheet text to ~30k chars (~8k tokens) to avoid Gemini DEADLINE_EXCEEDED
+        const MAX_DATASHEET_CHARS = 30_000;
+        const trimmedDatasheet = datasheetText.trim().length > MAX_DATASHEET_CHARS
+            ? datasheetText.trim().slice(0, MAX_DATASHEET_CHARS) + "\n\n[...truncated — document too long]"
+            : datasheetText.trim();
+
         const userPrompt = userPromptTemplate
             .replace("{serviceSummaries}", serviceSummaries)
-            .replace("{datasheetText}", datasheetText.trim());
+            .replace("{datasheetText}", trimmedDatasheet);
 
-        // Call Gemini
+        // Call Gemini (3 min timeout, 1 retry on transient failures)
         const rawResponse = await callGemini({
             model,
             temperature,
             systemInstruction: ingestUrl ? DEFAULT_SYSTEM_URL_AWARE : systemInstruction,
             userPrompt,
             responseMimeType: "application/json",
+            timeoutMs: 180_000,
+            retries: 1,
         });
 
-        // Parse JSON from Gemini response
-        const jsonMatch = rawResponse.match(/\{[\s\S]*\}/);
-        if (!jsonMatch) {
-            console.error("Gemini raw response:", rawResponse);
-            return NextResponse.json(
-                { error: "AI returned an unexpected format. Please try again." },
-                { status: 502 }
-            );
-        }
+        // Sanitize control characters that break JSON.parse
+        const sanitized = rawResponse.replace(/[\x00-\x1F\x7F]/g, " ");
 
-        const parsed = JSON.parse(jsonMatch[0]);
+        // Try parsing the full response first (responseMimeType: "application/json" should return clean JSON)
+        let parsed: any;
+        try {
+            parsed = JSON.parse(sanitized);
+        } catch {
+            // Fallback: extract the first balanced top-level JSON object
+            const start = sanitized.indexOf("{");
+            if (start === -1) {
+                console.error("Gemini raw response:", rawResponse.slice(0, 500));
+                return NextResponse.json(
+                    { error: "AI returned an unexpected format. Please try again." },
+                    { status: 502 }
+                );
+            }
+            let depth = 0;
+            let end = -1;
+            for (let i = start; i < sanitized.length; i++) {
+                if (sanitized[i] === "{") depth++;
+                else if (sanitized[i] === "}") depth--;
+                if (depth === 0) { end = i + 1; break; }
+            }
+            if (end === -1) end = sanitized.length;
+            parsed = JSON.parse(sanitized.slice(start, end));
+        }
 
         // Normalize: ensure we always return an items array
         let items = Array.isArray(parsed.items)
@@ -231,8 +254,28 @@ export async function POST(req: Request) {
         }
 
         return NextResponse.json({ items });
-    } catch (err) {
+    } catch (err: any) {
         console.error("POST /api/equipment/ingest error:", err);
+
+        // Stringify the full error for reliable keyword matching
+        const errStr = String(err?.message ?? "") + " " + String(err ?? "");
+        const isTimeout =
+            err?.name === "AbortError" ||
+            err?.code === 20 || // DOMException ABORT_ERR
+            err?.code === "UND_ERR_HEADERS_TIMEOUT" ||
+            err?.cause?.code === "UND_ERR_HEADERS_TIMEOUT" ||
+            errStr.includes("DEADLINE_EXCEEDED") ||
+            errStr.includes("aborted") ||
+            errStr.includes("timeout") ||
+            errStr.includes("Timeout");
+
+        if (isTimeout) {
+            return NextResponse.json(
+                { error: "The AI model timed out processing your datasheet. Try a smaller file or fewer pages." },
+                { status: 504 }
+            );
+        }
+
         return NextResponse.json(
             { error: "Internal Server Error" },
             { status: 500 }
