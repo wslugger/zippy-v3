@@ -150,12 +150,13 @@ model Feature {
 // Base configuration for BOMs
 // ============================================================
 model Equipment {
-  id       String  @id @default(auto()) @map("_id") @db.ObjectId
-  model       String
-  vendorId    String?
-  description String
-  family   String
-  roles    String[] // Represents primary_purposes (WAN, LAN, WLAN, SECURITY, etc.)
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  sku          String   @unique // Canonical join key for Price Book & Licensing
+  model        String
+  vendorId     String?
+  description  String
+  family       String
+  roles        String[] // Represents primary_purposes (WAN, LAN, WLAN, SECURITY, etc.)
   datasheetUrl String?
 
   // Service Catalog Mapping
@@ -165,9 +166,6 @@ model Equipment {
   status  String // Managed via Taxonomy
   eosDate DateTime?
 
-  // Financials - Embedded JSON to handle 2-axis structures
-  pricing Json // { purchasePrice: number, rentalPrice: number, managementSize: string ("Small"|"Medium"|"Large") }
-
   // Technical Specs - Polymorphic payload specific to the 'role'
   specs Json
 
@@ -175,4 +173,39 @@ model Equipment {
   updatedAt DateTime @updatedAt
 
   @@map("equipment")
+}
+
+// ============================================================
+// LICENSING CATALOG
+// Software licenses linked to equipment SKUs and packages
+// ============================================================
+model License {
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  sku               String   @unique
+  name              String
+  termMonths        Int
+  vendor            String // Validated against active ServiceOption vendors
+  supportedHardware String[] // Validated against equipment.sku
+  supportedPackages String[] // Validated against packages.slug
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("licenses")
+}
+
+// ============================================================
+// PRICE BOOK CATALOG
+// Flat price entries keyed by SKU (equipment, service, license)
+// ============================================================
+model Price {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  sku           String   @unique
+  listPrice     Float
+  currency      String   @default("USD")
+  effectiveDate DateTime
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("prices")
 }

@@ -41,7 +41,6 @@ export function EquipmentForm({
     const txExtras = taxonomy?.extraFields || {};
     const roles = txExtras.equipmentRoles || [];
     const statuses = txExtras.equipmentStatus || [];
-    const mgmtSizes = txExtras.managementSizes || [];
     const environments = txExtras.environments || [];
     const portTypes = txExtras.portTypes || [];
     const wifiStandards = txExtras.wifistandard || [];
@@ -51,6 +50,7 @@ export function EquipmentForm({
     const cellularIntegrations = txExtras.cellularIntegrations || [];
 
     const defaultValues: Partial<EquipmentPayload> = {
+        sku: initialData?.sku || "",
         model: initialData?.model || "",
         vendorId: initialData?.vendorId || "",
         description: initialData?.description || "",
@@ -61,11 +61,6 @@ export function EquipmentForm({
         status: initialData?.status || statuses[0],
         eosDate: initialData?.eosDate ? new Date(initialData.eosDate).toISOString() : "",
         datasheetUrl: initialData?.datasheetUrl || "",
-        pricing: {
-            purchasePrice: initialData?.pricing?.purchasePrice || 0,
-            rentalPrice: initialData?.pricing?.rentalPrice || 0,
-            managementSize: initialData?.pricing?.managementSize || mgmtSizes[0],
-        },
         specs: initialData?.specs || {},
     };
 
@@ -133,6 +128,19 @@ export function EquipmentForm({
                         <CardDescription>Core properties to classify and manage the status of this hardware.</CardDescription>
                     </CardHeader>
                     <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <FormField
+                            control={form.control}
+                            name="sku"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>SKU</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="e.g., MX105" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
                         <FormField
                             control={form.control}
                             name="model"
@@ -348,67 +356,7 @@ export function EquipmentForm({
                     </CardContent>
                 </Card>
 
-                {/* Section 3: Pricing */}
-                <Card className="border-zinc-200">
-                    <CardHeader>
-                        <CardTitle className="text-xl">Financial Details</CardTitle>
-                        <CardDescription>Dual-axis hardware cost structure.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <FormField
-                            control={form.control}
-                            name="pricing.purchasePrice"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Purchase Price (OTC) $</FormLabel>
-                                    <FormControl>
-                                        {/* @ts-ignore */}
-                                        <Input type="number" min="0" step="0.01" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="pricing.rentalPrice"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Rental Price (MRC) $</FormLabel>
-                                    <FormControl>
-                                        {/* @ts-ignore */}
-                                        <Input type="number" min="0" step="0.01" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="pricing.managementSize"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Management Tier</FormLabel>
-                                    <Select onValueChange={field.onChange} value={field.value}>
-                                        <FormControl>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Size" />
-                                            </SelectTrigger>
-                                        </FormControl>
-                                        <SelectContent>
-                                            {mgmtSizes.map((s: string) => (
-                                                <SelectItem key={s} value={s}>{s}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                    </CardContent>
-                </Card>
-
-                {/* Section 4: Progressive Technical Specs based on selected Role */}
+                {/* Section 3: Progressive Technical Specs based on selected Role */}
                 <Accordion type="single" collapsible className="w-full bg-white rounded-lg border border-zinc-200 shadow-sm" defaultValue="specs">
                     <AccordionItem value="specs" className="border-none">
                         <AccordionTrigger className="px-6 hover:no-underline hover:bg-zinc-50 rounded-t-lg data-[state=open]:border-b border-zinc-200">

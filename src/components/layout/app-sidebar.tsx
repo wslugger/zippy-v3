@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FolderOpen, Package, Wrench, Star, Globe, Zap, SlidersHorizontal } from "lucide-react";
+import { FolderOpen, Package, Wrench, Star, Globe, Zap, SlidersHorizontal, KeyRound, DollarSign } from "lucide-react";
 
 export function AppSidebar() {
   return (
@@ -50,6 +50,20 @@ export function AppSidebar() {
         >
           <Star className="h-4 w-4" />
           Features
+        </Link>
+        <Link
+          href="/licenses"
+          className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-foreground hover:bg-accent"
+        >
+          <KeyRound className="h-4 w-4" />
+          Licenses
+        </Link>
+        <Link
+          href="/pricing"
+          className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-foreground hover:bg-accent"
+        >
+          <DollarSign className="h-4 w-4" />
+          Price Book
         </Link>
         <Link
           href="/taxonomy"

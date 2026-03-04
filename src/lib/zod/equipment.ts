@@ -5,6 +5,7 @@ import { z } from "zod";
 // -----------------------------------------------------------------
 export const BaseEquipmentSchema = z.object({
     id: z.string().optional(),
+    sku: z.string().min(1, "SKU is required"),
     model: z.string().min(1, "Model is required"),
     vendorId: z.string().optional(),
     description: z.string().min(1, "Description is required"),
@@ -21,16 +22,7 @@ export const BaseEquipmentSchema = z.object({
 });
 
 // -----------------------------------------------------------------
-// 2. Financials (Embedded Dual-Axis)
-// -----------------------------------------------------------------
-export const PricingSchema = z.object({
-    purchasePrice: z.number().min(0, "Purchase price cannot be negative"),
-    rentalPrice: z.number().min(0, "Rental price cannot be negative"),
-    managementSize: z.string().min(1, "Management size is required"),
-});
-
-// -----------------------------------------------------------------
-// 3. Technical Specs (Polymorphic properties)
+// 2. Technical Specs (Polymorphic properties)
 // -----------------------------------------------------------------
 
 // A) WAN Specs
@@ -72,13 +64,12 @@ export const WLANSpecsSchema = z.object({
 // -----------------------------------------------------------------
 
 export const CreateEquipmentSchema = BaseEquipmentSchema.extend({
-    pricing: PricingSchema,
     specs: z.union([
         WANSpecsSchema,
         LANSpecsSchema,
         WLANSpecsSchema,
         z.record(z.string(), z.unknown()) // Fallback for unmatched roles
-    ] as any),
+    ] as any), // eslint-disable-line @typescript-eslint/no-explicit-any
 });
 
 export const UpdateEquipmentSchema = CreateEquipmentSchema.partial();

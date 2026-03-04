@@ -86,23 +86,15 @@ export default async function EquipmentCatalogPage() {
                                     </div>
                                 </div>
 
-                                <div className="pt-2 border-t border-zinc-100 flex items-center justify-between">
-                                    <div className="flex flex-col gap-1">
-                                        <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">Capabilities</span>
-                                        <div className="flex flex-wrap gap-1">
-                                            {(item.roles || [item.role]).filter((r: string) => r && r !== 'SECURITY').map((r: string) => (
-                                                <Badge key={r} variant="outline" className="text-[10px] py-0 px-1.5 h-4 border-zinc-200 text-zinc-600 bg-zinc-50/50">
-                                                    {r}
-                                                </Badge>
-                                            ))}
-                                            {(!item.roles || item.roles.length === 0) && !item.role && <span className="text-xs text-zinc-400">N/A</span>}
-                                        </div>
-                                    </div>
-                                    <div className="flex flex-col text-right">
-                                        <span className="text-zinc-400 font-medium uppercase tracking-wider">Pricing</span>
-                                        <span className="font-semibold text-zinc-900">
-                                            ${item.pricing?.purchasePrice.toLocaleString()} / ${item.pricing?.rentalPrice.toLocaleString()}
-                                        </span>
+                                <div className="pt-2 border-t border-zinc-100">
+                                    <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">Capabilities</span>
+                                    <div className="flex flex-wrap gap-1 mt-1">
+                                        {(item.roles || [item.role]).filter((r: string) => r && r !== 'SECURITY').map((r: string) => (
+                                            <Badge key={r} variant="outline" className="text-[10px] py-0 px-1.5 h-4 border-zinc-200 text-zinc-600 bg-zinc-50/50">
+                                                {r}
+                                            </Badge>
+                                        ))}
+                                        {(!item.roles || item.roles.length === 0) && !item.role && <span className="text-xs text-zinc-400">N/A</span>}
                                     </div>
                                 </div>
                             </CardContent>
