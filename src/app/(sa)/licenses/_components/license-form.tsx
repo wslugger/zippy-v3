@@ -271,7 +271,7 @@ export function LicenseForm({ initialData, onSuccess, onCancel }: LicenseFormPro
                                                             const isSelected = currentHw.includes(eq.sku);
                                                             return (
                                                                 <CommandItem
-                                                                    key={eq.sku}
+                                                                    key={`${eq.sku}-${isSelected}`}
                                                                     value={`${eq.sku} ${eq.name}`}
                                                                     onSelect={() => {
                                                                         field.onChange(
@@ -368,7 +368,7 @@ export function LicenseForm({ initialData, onSuccess, onCancel }: LicenseFormPro
                                                             const isSelected = currentPkgs.includes(pkg.slug);
                                                             return (
                                                                 <CommandItem
-                                                                    key={pkg.slug}
+                                                                    key={`${pkg.slug}-${isSelected}`}
                                                                     value={`${pkg.slug} ${pkg.name}`}
                                                                     onSelect={() => {
                                                                         field.onChange(
