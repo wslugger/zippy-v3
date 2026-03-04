@@ -96,21 +96,7 @@ export function LicenseForm({ initialData, onSuccess, onCancel }: LicenseFormPro
     const selectedHw = form.watch("supportedHardware") || [];
     const selectedPkgs = form.watch("supportedPackages") || [];
 
-    const toggleHw = (sku: string) => {
-        const current = form.getValues("supportedHardware");
-        form.setValue(
-            "supportedHardware",
-            current.includes(sku) ? current.filter((s: string) => s !== sku) : [...current, sku]
-        );
-    };
 
-    const togglePkg = (slug: string) => {
-        const current = form.getValues("supportedPackages");
-        form.setValue(
-            "supportedPackages",
-            current.includes(slug) ? current.filter((s: string) => s !== slug) : [...current, slug]
-        );
-    };
 
     const onSubmit = async (data: CreateLicenseInput) => {
         setIsSaving(true);
@@ -287,7 +273,13 @@ export function LicenseForm({ initialData, onSuccess, onCancel }: LicenseFormPro
                                                                 <CommandItem
                                                                     key={eq.sku}
                                                                     value={`${eq.sku} ${eq.name}`}
-                                                                    onSelect={() => toggleHw(eq.sku)}
+                                                                    onSelect={() => {
+                                                                        field.onChange(
+                                                                            currentHw.includes(eq.sku)
+                                                                                ? currentHw.filter((s: string) => s !== eq.sku)
+                                                                                : [...currentHw, eq.sku]
+                                                                        );
+                                                                    }}
                                                                     className="flex items-center gap-2 py-2"
                                                                 >
                                                                     <div className={cn(
@@ -321,7 +313,7 @@ export function LicenseForm({ initialData, onSuccess, onCancel }: LicenseFormPro
                                                     {sku}
                                                     <button
                                                         type="button"
-                                                        onClick={() => toggleHw(sku)}
+                                                        onClick={() => field.onChange(currentHw.filter((s: string) => s !== sku))}
                                                         className="ml-0.5 rounded-full hover:bg-violet-100 p-0.5"
                                                     >
                                                         <X className="h-2.5 w-2.5" />
@@ -378,7 +370,13 @@ export function LicenseForm({ initialData, onSuccess, onCancel }: LicenseFormPro
                                                                 <CommandItem
                                                                     key={pkg.slug}
                                                                     value={`${pkg.slug} ${pkg.name}`}
-                                                                    onSelect={() => togglePkg(pkg.slug)}
+                                                                    onSelect={() => {
+                                                                        field.onChange(
+                                                                            currentPkgs.includes(pkg.slug)
+                                                                                ? currentPkgs.filter((s: string) => s !== pkg.slug)
+                                                                                : [...currentPkgs, pkg.slug]
+                                                                        );
+                                                                    }}
                                                                     className="flex items-center gap-2 py-2"
                                                                 >
                                                                     <div className={cn(
@@ -414,7 +412,7 @@ export function LicenseForm({ initialData, onSuccess, onCancel }: LicenseFormPro
                                                         {pkg?.name ?? slug}
                                                         <button
                                                             type="button"
-                                                            onClick={() => togglePkg(slug)}
+                                                            onClick={() => field.onChange(currentPkgs.filter((s: string) => s !== slug))}
                                                             className="ml-0.5 rounded-full hover:bg-sky-100 p-0.5"
                                                         >
                                                             <X className="h-2.5 w-2.5" />
