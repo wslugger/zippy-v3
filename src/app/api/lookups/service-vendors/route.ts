@@ -7,7 +7,7 @@ const db = prisma as any;
 export async function GET() {
     try {
         const services = await db.service.findMany({
-            where: { isActive: true },
+            where: { isActive: true, isLicensable: true },
             select: { name: true, serviceOptions: true },
         });
 

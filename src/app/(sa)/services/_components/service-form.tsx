@@ -58,6 +58,7 @@ const serviceSchema = z.object({
     shortDescription: z.string().min(5, "Short description must be at least 5 characters"),
     description: z.string().min(10, "Description must be at least 10 characters"),
     isActive: z.boolean(),
+    isLicensable: z.boolean(),
     constraints: z.array(z.string()),
     assumptions: z.array(z.string()),
     serviceOptions: z.array(serviceOptionSchema),
@@ -82,6 +83,7 @@ export function ServiceForm({ initialData, serviceId }: ServiceFormProps) {
             shortDescription: initialData?.shortDescription || "",
             description: initialData?.description || "",
             isActive: initialData?.isActive ?? true,
+            isLicensable: initialData?.isLicensable ?? true,
             constraints: initialData?.constraints || [],
             assumptions: initialData?.assumptions || [],
             serviceOptions: (initialData?.serviceOptions || []).map((opt: any) => ({
@@ -146,6 +148,7 @@ export function ServiceForm({ initialData, serviceId }: ServiceFormProps) {
                 shortDescription: initialData.shortDescription || "",
                 description: initialData.description || "",
                 isActive: initialData.isActive ?? true,
+                isLicensable: initialData.isLicensable ?? true,
                 constraints: initialData.constraints || [],
                 assumptions: initialData.assumptions || [],
                 serviceOptions: mappedOptions,
@@ -257,6 +260,23 @@ export function ServiceForm({ initialData, serviceId }: ServiceFormProps) {
                                     </FormControl>
                                     <FormLabel className="text-sm font-medium cursor-pointer">
                                         {field.value ? "Active" : "Inactive"}
+                                    </FormLabel>
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="isLicensable"
+                            render={({ field }) => (
+                                <FormItem className="flex items-center space-x-2 space-y-0 rounded-md border px-3 py-2 bg-white">
+                                    <FormControl>
+                                        <Switch
+                                            checked={field.value}
+                                            onCheckedChange={field.onChange}
+                                        />
+                                    </FormControl>
+                                    <FormLabel className="text-sm font-medium cursor-pointer">
+                                        {field.value ? "Licensable / Hardware" : "Software / Cloud"}
                                     </FormLabel>
                                 </FormItem>
                             )}

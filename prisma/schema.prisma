@@ -35,6 +35,7 @@ model Service {
   assumptions      String[]
   serviceOptions   Json[]
   isActive         Boolean  @default(true)
+  isLicensable     Boolean  @default(true)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
