@@ -67,16 +67,18 @@ export function LicenseForm({ initialData, onSuccess, onCancel }: LicenseFormPro
         },
     });
 
-    // Load lookup data
+    // Load lookup data — guard against non-array responses in case of API errors
     useEffect(() => {
+        const safeArray = <T,>(val: unknown): T[] => (Array.isArray(val) ? (val as T[]) : []);
+
         Promise.all([
-            fetch("/api/lookups/service-vendors").then((r) => r.json()),
-            fetch("/api/lookups/equipment").then((r) => r.json()),
-            fetch("/api/lookups/packages").then((r) => r.json()),
+            fetch("/api/lookups/service-vendors").then((r) => r.json()).catch(() => []),
+            fetch("/api/lookups/equipment").then((r) => r.json()).catch(() => []),
+            fetch("/api/lookups/packages").then((r) => r.json()).catch(() => []),
         ]).then(([v, e, p]) => {
-            setVendors(v);
-            setEquipmentOptions(e);
-            setPackageOptions(p);
+            setVendors(safeArray<string>(v));
+            setEquipmentOptions(safeArray<EquipmentLookup>(e));
+            setPackageOptions(safeArray<PackageLookup>(p));
         });
     }, []);
 

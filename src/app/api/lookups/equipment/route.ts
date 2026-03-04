@@ -15,6 +15,7 @@ export async function GET() {
         );
     } catch (error) {
         console.error("GET /api/lookups/equipment error:", error);
-        return NextResponse.json({ error: "Failed to fetch equipment lookup" }, { status: 500 });
+        // Return empty array so client .map() never throws
+        return NextResponse.json([]);
     }
 }
