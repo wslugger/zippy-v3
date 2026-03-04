@@ -58,8 +58,6 @@ export default async function EquipmentCatalogPage() {
                                         <h3 className="font-semibold text-lg leading-none group-hover:text-primary transition-colors">
                                             {item.model}
                                         </h3>
-                                        <p className="text-sm text-zinc-500 font-medium">Desc: {item.description}</p>
-                                        <p className="text-sm text-zinc-500 font-medium">Family: {item.family}</p>
                                     </div>
                                     <div className="flex flex-col items-end gap-2">
                                         <div className="flex items-center gap-1">
